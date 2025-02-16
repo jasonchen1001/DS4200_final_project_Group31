@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EV Charging Stations Analysis</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://d3js.org/topojson.v3.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega@5.25.0/build/vega.min.js" 
+            integrity="sha384-..." 
+            crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega-lite@5.16.0/build/vega-lite.min.js" 
+            integrity="sha384-..." 
+            crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega-embed@6.22.1/build/vega-embed.min.js" 
+            integrity="sha384-..." 
+            crossorigin="anonymous"></script>
+</head>
+<body>
+    <header>
+        <h1>⚡ EV Charging Stations Analysis</h1>
+    </header>
+
+    <section id="introduction">
+        <h2>Project Introduction</h2>
+        <p>This project analyzes electric vehicle (EV) charging stations across the United States to understand their distribution, accessibility, and characteristics. Our goal is to provide insights into the current state of EV charging infrastructure and identify areas for improvement.</p>
+    </section>
+
+    <section id="data-description">
+        <h2>About the Data</h2>
+        <p>The dataset contains information about EV charging stations with the following key attributes:</p>
+        <ul>
+            <li>Location (Latitude, Longitude)</li>
+            <li>Charger Type (L1, L2, DC)</li>
+            <li>Availability Hours</li>
+            <li>Cost per kWh</li>
+            <li>User Ratings</li>
+            <li>Installation Year</li>
+        </ul>
+        <p>Data size: [X] records with [Y] attributes</p>
+        <p>Source: [Data source with link]</p>
+    </section>
+
+    <section id="visualizations">
+        <h2>Data Visualizations</h2>
+        
+        <!-- D3 Visualization -->
+        <div class="viz-container">
+            <h3>Charging Station Distribution Map (D3)</h3>
+            <div id="map-viz"></div>
+            <p class="viz-description">This interactive map shows the geographical distribution of EV charging stations. Colors indicate different charger types, and hovering over points reveals detailed station information.</p>
+        </div>
+
+        <!-- Altair Visualization -->
+        <div class="viz-container">
+            <h3>Installation Trends Over Time</h3>
+            <div id="trend-viz"></div>
+            <p class="viz-description">Interactive visualization showing the growth of different types of charging stations over time. Click on legend items to show/hide specific charger types.</p>
+        </div>
+
+    </section>
+
+    <script src="visualizations.js"></script>
+    <script src="https://d3js.org/d3-hexbin.v0.2.min.js"></script>
+    <script src="https://d3js.org/d3-contour.v2.min.js"></script>
+</body>
+</html> 
