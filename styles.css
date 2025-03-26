@@ -149,6 +149,11 @@ section h2::after {
     .viz-container {
         padding: 1rem;
     }
+
+    .team-info p {
+        font-size: 0.9rem;
+        padding: 0 1rem;
+    }
 }
 
 /* 动画效果 */
@@ -365,4 +370,23 @@ circle {
 .hidden {
     opacity: 0;
     pointer-events: none;
+}
+
+.team-info {
+    margin: 1rem 0 0;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.team-info p {
+    font-size: 1rem;
+    font-weight: 300;
+    margin: 0.3rem 0;
+    line-height: 1.4;
+}
+
+@media (max-width: 768px) {
+    .team-info p {
+        font-size: 0.9rem;
+        padding: 0 1rem;
+    }
 } 
