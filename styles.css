@@ -1,37 +1,218 @@
-body {
-    font-family: Arial, sans-serif;
-    line-height: 1.6;
-    margin: 0;
-    padding: 20px;
-    max-width: 1200px;
-    margin: 0 auto;
+/* 全局样式 */
+:root {
+    --primary-color: #2c3e50;
+    --secondary-color: #3498db;
+    --accent-color: #e74c3c;
+    --background-color: #f8f9fa;
+    --text-color: #2c3e50;
+    --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --transition-speed: 0.3s;
 }
 
+body {
+    font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    line-height: 1.6;
+    color: var(--text-color);
+    background-color: var(--background-color);
+    margin: 0;
+    padding: 0;
+}
+
+/* 页眉样式 */
 header {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    padding: 2rem 0;
     text-align: center;
-    padding: 20px;
-    background-color: #f5f5f5;
-    margin-bottom: 30px;
+    box-shadow: var(--card-shadow);
+}
+
+header h1 {
+    margin: 0;
+    font-size: 2.5rem;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+}
+
+/* 章节样式 */
+section {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 2rem;
+}
+
+section h2 {
+    color: var(--primary-color);
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+    padding-bottom: 0.5rem;
+}
+
+section h2::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 60px;
+    height: 4px;
+    background: var(--secondary-color);
+    border-radius: 2px;
+}
+
+/* 数据描述样式 */
+#data-description ul {
+    list-style: none;
+    padding: 0;
+}
+
+#data-description li {
+    margin: 0.8rem 0;
+    padding-left: 1.5rem;
+    position: relative;
+}
+
+#data-description li::before {
+    content: '•';
+    color: var(--secondary-color);
+    font-size: 1.5rem;
+    position: absolute;
+    left: 0;
+    top: -0.2rem;
+}
+
+#data-description li ul {
+    margin-left: 1.5rem;
+    margin-top: 0.5rem;
+}
+
+/* 可视化容器样式 */
+.viz-container {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin: 2rem 0;
+    box-shadow: var(--card-shadow);
+    transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+}
+
+.viz-container:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.viz-container h3 {
+    color: var(--primary-color);
+    font-size: 1.5rem;
+    margin-top: 0;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.viz-container h3::after {
+    content: attr(data-tech);
+    font-size: 0.9rem;
+    color: var(--secondary-color);
+    font-weight: normal;
+    background: rgba(52, 152, 219, 0.1);
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+}
+
+.viz-description {
+    color: #666;
+    font-size: 0.95rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #eee;
+}
+
+/* 地图容器特殊样式 */
+#map-viz {
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    section {
+        padding: 0 1rem;
+    }
+
+    header h1 {
+        font-size: 2rem;
+    }
+
+    .viz-container {
+        padding: 1rem;
+    }
+}
+
+/* 动画效果 */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 section {
-    margin-bottom: 40px;
+    animation: fadeIn 0.8s ease-out;
+}
+
+/* 工具提示样式 */
+.tooltip {
+    position: absolute;
+    visibility: hidden;
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 8px;
+    font-size: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    pointer-events: none;
+    z-index: 1000;
+}
+
+/* 图例样式 */
+.legend {
+    background: white;
+    padding: 0.8rem;
+    border-radius: 6px;
+    box-shadow: var(--card-shadow);
+    font-size: 0.9rem;
+}
+
+/* 控件样式 */
+select, button {
+    background: white;
+    border: 1px solid #ddd;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    color: var(--text-color);
+    transition: all var(--transition-speed);
+}
+
+select:hover, button:hover {
+    border-color: var(--secondary-color);
+}
+
+select:focus, button:focus {
+    outline: none;
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
 }
 
 h1, h2, h3 {
     color: #333;
-}
-
-.viz-container {
-    margin-bottom: 30px;
-    padding: 20px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-}
-
-.viz-description {
-    margin-top: 15px;
-    color: #666;
 }
 
 #map-viz, #trend-viz, #pie-viz {
@@ -47,75 +228,6 @@ h1, h2, h3 {
 
 .references a:hover {
     text-decoration: underline;
-}
-
-.tooltip {
-    position: absolute;
-    background: rgba(255, 255, 255, 0.98);
-    padding: 12px;
-    border-radius: 4px;
-    font-size: 12px;
-    pointer-events: none;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    border: 1px solid #ddd;
-    z-index: 1000;
-    max-width: 280px;
-    line-height: 1.4;
-}
-
-.tooltip-title {
-    font-size: 14px;
-    font-weight: bold;
-    margin-bottom: 8px;
-    color: #333;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 5px;
-}
-
-.tooltip-address {
-    color: #666;
-    margin-bottom: 8px;
-    font-style: italic;
-    word-wrap: break-word;
-}
-
-.tooltip-content {
-    display: grid;
-    gap: 4px;
-}
-
-.tooltip-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.tooltip-row .label {
-    color: #666;
-    margin-right: 10px;
-}
-
-.tooltip-row .value {
-    color: #333;
-    font-weight: 500;
-}
-
-.legend text {
-    font-size: 12px;
-    fill: #666;
-    alignment-baseline: middle;
-}
-
-.point-count {
-    font-size: 14px;
-    fill: #666;
-}
-
-#map-viz {
-    width: 100%;
-    height: 500px;
-    margin: 20px 0;
-    border: 1px solid #ddd;
 }
 
 #debug-output {
@@ -179,4 +291,78 @@ circle {
     border: 1px solid #f5c6cb;
     border-radius: 4px;
     margin: 1rem 0;
+}
+
+.legend-item {
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.legend-item:hover {
+    opacity: 0.8;
+}
+
+.dot-L1, .dot-L2, .dot-DC {
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.dot-L1:hover, .dot-L2:hover, .dot-DC:hover {
+    stroke: #fff;
+    stroke-width: 2px;
+}
+
+.line-L1, .line-L2, .line-DC {
+    transition: all 0.2s ease;
+}
+
+.selected-dot {
+    stroke: #fff;
+    stroke-width: 2px;
+    r: 8;
+}
+
+#trend-viz {
+    position: relative;
+}
+
+#trend-viz svg {
+    overflow: visible;
+}
+
+.bar {
+    fill: #f0f0f0;
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+/* 确保图例文本可见 */
+.legend-item text {
+    fill: #333;
+    font-size: 12px;
+    alignment-baseline: middle;
+}
+
+/* 确保坐标轴标签可见 */
+.axis-label {
+    fill: #666;
+    font-size: 14px;
+}
+
+/* 确保网格线显示正确 */
+.tick line {
+    stroke: #e0e0e0;
+    stroke-opacity: 0.3;
+}
+
+/* 添加交互时的过渡效果 */
+.dot-L1, .dot-L2, .dot-DC,
+.line-L1, .line-L2, .line-DC {
+    transition: all 0.3s ease;
+}
+
+/* 隐藏的元素样式 */
+.hidden {
+    opacity: 0;
+    pointer-events: none;
 } 

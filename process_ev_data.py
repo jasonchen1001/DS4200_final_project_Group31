@@ -1,220 +1,179 @@
-import pandas as pd
-import os
-import re
 import altair as alt
+import pandas as pd
+import json
 
-def is_valid_coordinate(lat, lon):
-    """
-    Check if coordinates are within valid range
-    """
-    try:
-        lat = float(lat)
-        lon = float(lon)
-        
-        # Basic range check
-        if not (-90 <= lat <= 90) or not (-180 <= lon <= 180):
-            return False
-            
-        # Check for 0,0 (common default value)
-        if lat == 0 and lon == 0:
-            return False
-            
-        # Check for integer coordinates (likely placeholder data)
-        if lat.is_integer() and lon.is_integer():
-            return False
-        
-        return True
-        
-    except (ValueError, TypeError):
-        return False
-
-def is_valid_address(address):
-    """
-    Check if address is valid
-    """
-    if not isinstance(address, str):
-        return False
-        
-    invalid_patterns = [
-        'Random',
-        'City \d+',
-        'Country$',
-        '^\d+ \d+$',
-        'Unknown',
-        'Test',
-        'Sample'
-    ]
-    
-    address = address.strip().lower()
-    
-    # Check invalid patterns
-    for pattern in invalid_patterns:
-        if re.search(pattern.lower(), address):
-            return False
-            
-    # Check minimum length
-    if len(address) < 10:  # Valid addresses typically have at least street number and name
-        return False
-        
-    # Check if contains numbers (valid addresses usually have house numbers)
-    if not any(c.isdigit() for c in address):
-        return False
-        
-    return True
-
-def create_trend_chart(df):
-    """
-    Create interactive installation trend chart
-    """
-    # Prepare data
-    yearly_data = df.groupby(['Installation Year', 'Charger Type']).size().reset_index(name='count')
-    
-    # Create base chart
-    base = alt.Chart(yearly_data).encode(
-        x=alt.X('Installation Year:Q',
-                scale=alt.Scale(domain=[2010, 2024]),
-                axis=alt.Axis(title='Installation Year', grid=True)),
-        tooltip=[
-            alt.Tooltip('Installation Year:Q', title='Year'),
-            alt.Tooltip('Charger Type:N', title='Type'),
-            alt.Tooltip('count:Q', title='Installations')
-        ]
+def create_detailed_heatmap(df):
+    df['Cost_Range'] = pd.cut(
+        df['Cost (USD/kWh)'],
+        bins=[0, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, float('inf')],
+        labels=['0–0.05', '0.05–0.10', '0.10–0.15', '0.15–0.20', '0.20–0.25', 
+                '0.25–0.30', '0.30–0.35', '0.35–0.40', '0.40–0.45', '0.45+']
     )
-    
-    # Create line chart
-    lines = base.mark_line(point=True).encode(
-        y=alt.Y('count:Q',
-                axis=alt.Axis(title='Number of Installations', grid=True)),
-        color=alt.Color('Charger Type:N',
+
+    agg = df.groupby(['Cost_Range', 'Charger Type']).agg({
+        'Usage Stats (avg users/day)': 'mean',
+        'Station ID': 'count'
+    }).reset_index()
+    agg = agg[agg['Station ID'] > 0]
+
+    base = alt.Chart(agg).encode(
+        x=alt.X('Cost_Range:O',
+                title='Cost per kWh (USD)',
+                sort=['0–0.05', '0.05–0.10', '0.10–0.15', '0.15–0.20', '0.20–0.25', 
+                      '0.25–0.30', '0.30–0.35', '0.35–0.40', '0.40–0.45', '0.45+'],
+                axis=alt.Axis(
+                    labelAngle=45,
+                    grid=False,
+                    domain=False,
+                    titlePadding=15,
+                    labelPadding=10
+                )),
+        y=alt.Y('Charger Type:N',
+                title='Charger Type',
+                sort=['DC Fast', 'Level 2', 'Level 1'],
+                axis=alt.Axis(
+                    grid=False,
+                    domain=False,
+                    titlePadding=15,
+                    labelPadding=10
+                )),
+        tooltip=[
+            alt.Tooltip('Cost_Range:O', title='Cost Range'),
+            alt.Tooltip('Charger Type:N', title='Charger Type'),
+            alt.Tooltip('Usage Stats (avg users/day):Q', title='Avg Daily Users', format='.1f'),
+            alt.Tooltip('Station ID:Q', title='Number of Stations', format=',d')
+        ]
+    ).interactive()
+
+    heatmap = base.mark_rect(
+        stroke='white',
+        strokeWidth=2
+    ).encode(
+        color=alt.Color('Station ID:Q',
+                       title='Number of Stations',
                        scale=alt.Scale(
-                           domain=['L1', 'L2', 'DC'],
-                           range=['#ff4d4d', '#3385ff', '#33cc33']
+                           scheme='yellowgreenblue',  
+                           type='symlog',  
+                       ),
+                       legend=alt.Legend(
+                           gradientLength=150,
+                           orient='right',
+                           titlePadding=10,
+                           labelPadding=5
                        ))
     )
-    
-    # Add interactive selection
-    selection = alt.selection_multi(fields=['Charger Type'], bind='legend')
-    
-    # Combine chart and add interaction
-    chart = lines.add_selection(
-        selection
-    ).transform_filter(
-        selection
-    ).properties(
-        width=800,
-        height=400,
-        title='EV Charging Station Installation Trends'
-    ).configure_axis(
-        grid=True,
-        gridColor='#f0f0f0'
-    ).configure_view(
-        strokeWidth=0
+
+    text = base.mark_text(
+        font='Arial',
+        fontSize=11,
+        fontWeight='bold',
+        color='white',  
+        baseline='middle',
+        align='center'
+    ).encode(
+        text=alt.Text('Station ID:Q', format=',d')
     )
-    
+
+    chart = (heatmap + text).properties(
+        width=900,
+        height=200,
+        padding={'left': 50, 'right': 120, 'top': 40, 'bottom': 60},
+        title=alt.TitleParams(
+            text='Cost vs Charger Type Distribution',
+            fontSize=16,
+            anchor='middle',
+            offset=20
+        )
+    ).configure_view(
+        stroke=None
+    ).configure_axis(
+        labelFontSize=12,
+        titleFontSize=14
+    ).configure_legend(
+        titleFontSize=12,
+        labelFontSize=11,
+        padding=10,
+        cornerRadius=4,
+        strokeColor='#ddd'
+    )
+
     return chart
 
-def process_ev_data(file_path):
-    # Read CSV file
-    df = pd.read_csv(file_path)
-    print(f"Initial data shape: {df.shape}")
-    
-    # 1. Basic cleaning
-    df = df.drop_duplicates()
-    print(f"\nShape after removing duplicates: {df.shape}")
-    
-    # 2. Filter invalid addresses
-    print("\nFiltering invalid addresses...")
-    df['has_valid_address'] = df['Address'].apply(is_valid_address)
-    invalid_addresses = df[~df['has_valid_address']]
-    print(f"Found {len(invalid_addresses)} records with invalid addresses")
-    
-    if len(invalid_addresses) > 0:
-        print("\nSample of invalid addresses:")
-        print(invalid_addresses['Address'].head())
-    
-    # Keep only records with valid addresses
-    df = df[df['has_valid_address']].drop('has_valid_address', axis=1)
-    print(f"\nRecords with valid addresses: {len(df)}")
-    
-    # 3. Basic coordinate validation
-    print("\nValidating coordinates...")
-    valid_coords = df.apply(
-        lambda row: is_valid_coordinate(row['Latitude'], row['Longitude']), 
-        axis=1
-    )
-    df = df[valid_coords]
-    print(f"Records with valid coordinates: {len(df)}")
-    
-    # 4. Standardize time format
-    def standardize_time(time_str):
-        if pd.isna(time_str) or time_str == '24/7':
-            return '00:00-24:00'
-        return time_str
-    
-    df['Availability'] = df['Availability'].apply(standardize_time)
-    
-    # 5. Normalize charger types
-    charging_types = {
-        'AC Level 1': 'L1',
-        'AC Level 2': 'L2',
-        'DC Fast Charger': 'DC'
-    }
-    df['Charger Type'] = df['Charger Type'].map(charging_types)
-    
-    # 6. Process connector types
-    df['Connector Types'] = df['Connector Types'].str.split(',').apply(
-        lambda x: [t.strip() for t in x] if isinstance(x, list) else []
-    )
-    
-    # 7. Process cost range
-    df['Cost (USD/kWh)'] = pd.to_numeric(df['Cost (USD/kWh)'], errors='coerce')
-    df = df[df['Cost (USD/kWh)'].isna() | df['Cost (USD/kWh)'].between(0, 2)]
-    
-    # 8. Process rating range
-    df['Reviews (Rating)'] = pd.to_numeric(df['Reviews (Rating)'], errors='coerce')
-    df = df[df['Reviews (Rating)'].isna() | df['Reviews (Rating)'].between(1, 5)]
-    
-    # 9. Add additional fields
-    df['Is24Hours'] = df['Availability'].apply(lambda x: x == '00:00-24:00')
-    df['IsHighPower'] = df['Charging Capacity (kW)'].fillna(0) > 100
-    
-    # 10. Process installation year
-    df['Installation Year'] = pd.to_numeric(df['Installation Year'], errors='coerce')
-    df = df[
-        df['Installation Year'].isna() | 
-        df['Installation Year'].between(2000, 2024)
-    ]
-    
-    # Create trend chart
-    trend_chart = create_trend_chart(df)
-    
-    # Save chart as HTML
-    trend_chart.save('trend_chart.html')
-    
-    # Print statistics
-    print("\nFinal data summary:")
-    print(f"Total stations: {len(df)}")
-    print("\nCoordinate ranges:")
-    print(df[['Latitude', 'Longitude']].describe())
-    print("\nCharger type distribution:")
-    print(df['Charger Type'].value_counts())
-    print("\nAvailability:")
-    print(f"24/7 available: {df['Is24Hours'].sum()}")
-    print(f"High power stations: {df['IsHighPower'].sum()}")
-    
-    # Save processed data
-    os.makedirs('data', exist_ok=True)
-    output_filename = 'processed_' + os.path.basename(file_path)
-    output_path = os.path.join('data', output_filename)
-    df.to_csv(output_path, index=False, float_format='%.6f')
-    print(f"\nProcessed data saved to: {output_path}")
-    
-    return df
+def create_distance_usage_scatter(df):
+    scatter = alt.Chart(df).mark_circle(opacity=0.6).encode(
+        x=alt.X('Distance to City (miles):Q',
+                title='Distance to City (miles)',
+                scale=alt.Scale(zero=False),
+                axis=alt.Axis(
+                    grid=True,
+                    titlePadding=10,
+                    labelPadding=5
+                )),
+        y=alt.Y('Usage Stats (avg users/day):Q',
+                title='Average Daily Users',
+                scale=alt.Scale(zero=True),
+                axis=alt.Axis(
+                    grid=True,
+                    titlePadding=10,
+                    labelPadding=5
+                )),
+        size=alt.Size('Number of Parking Spots:Q',
+                     title='Number of Parking Spots',
+                     scale=alt.Scale(range=[50, 400])),
+        color=alt.Color('Renewable Energy:N',
+                       title='Renewable Energy',
+                       scale=alt.Scale(
+                           domain=['Yes', 'No'],
+                           range=['#2ecc71', '#e74c3c']
+                       )),
+        tooltip=[
+            alt.Tooltip('Station Name:N', title='Station Name'),
+            alt.Tooltip('Distance to City (miles):Q', title='Distance to City', format='.1f'),
+            alt.Tooltip('Usage Stats (avg users/day):Q', title='Avg Daily Users', format='.1f'),
+            alt.Tooltip('Number of Parking Spots:Q', title='Parking Spots'),
+            alt.Tooltip('Renewable Energy:N', title='Renewable Energy'),
+            alt.Tooltip('City:N', title='City')
+        ]
+    ).properties(
+        width=800,
+        height=500,
+        title=alt.TitleParams(
+            text='Distance to City vs. Usage',
+            subtitle='Size indicates number of parking spots, color shows renewable energy usage',
+            fontSize=16,
+            subtitleFontSize=13,
+            anchor='middle',
+            offset=20
+        )
+    ).configure_axis(
+        labelFontSize=11,
+        titleFontSize=13
+    ).configure_legend(
+        titleFontSize=12,
+        labelFontSize=11
+    ).interactive()
+
+    return scatter
+
+def process_ev_data(data_file):
+    try:
+        df = pd.read_csv(data_file)
+        print(f"Initial data shape: {df.shape}\n")
+
+        df = df.drop_duplicates()
+        print(f"Shape after removing duplicates: {df.shape}\n")
+
+        heatmap = create_detailed_heatmap(df)
+        heatmap_spec = heatmap.to_dict()
+        with open('heatmap_spec.json', 'w') as f:
+            json.dump(heatmap_spec, f)
+        
+        print("\nVisualization specifications saved successfully")
+        
+    except Exception as e:
+        print(f"Error processing data: {str(e)}")
+        raise
 
 if __name__ == "__main__":
-    input_file = 'data/detailed_ev_charging_stations.csv'
-    processed_df = process_ev_data(input_file)
-    
-    # Print final validation info
-    print("\nSample records:")
-    print(processed_df[['Latitude', 'Longitude', 'Address', 'Charger Type']].head())
+    data_file = "data/processed_detailed_ev_charging_stations.csv"
+    process_ev_data(data_file)

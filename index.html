@@ -5,61 +5,155 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EV Charging Stations Analysis</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
     <script src="https://d3js.org/d3.v7.min.js"></script>
-    <script src="https://d3js.org/topojson.v3.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vega@5.25.0/build/vega.min.js" 
-            integrity="sha384-..." 
-            crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vega-lite@5.16.0/build/vega-lite.min.js" 
-            integrity="sha384-..." 
-            crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vega-embed@6.22.1/build/vega-embed.min.js" 
-            integrity="sha384-..." 
-            crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega@5.25.0/build/vega.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega-lite@5.16.0/build/vega-lite.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vega-embed@6.22.1/build/vega-embed.min.js"></script>
+    <style>
+        #map-viz {
+            height: 600px;
+            width: 100%;
+            background: #f8f9fa;
+            position: relative;
+        }
+        .map-controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            min-width: 200px;
+        }
+        .map-controls div {
+            margin-bottom: 10px;
+        }
+        .map-controls label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 500;
+        }
+        .map-controls select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: white;
+            font-size: 14px;
+        }
+        .map-controls select:hover {
+            border-color: #999;
+        }
+        .map-controls select:focus {
+            border-color: #3385ff;
+            outline: none;
+        }
+        .cluster-icon {
+            background-color: #fff;
+            border-radius: 50%;
+            text-align: center;
+            color: #333;
+            font-weight: bold;
+            border: 2px solid #666;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
 </head>
 <body>
     <header>
         <h1>⚡ EV Charging Stations Analysis</h1>
+        <p class="subtitle">Exploring the Future of Electric Vehicle Infrastructure</p>
     </header>
 
-    <section id="introduction">
-        <h2>Project Introduction</h2>
-        <p>This project analyzes electric vehicle (EV) charging stations across the United States to understand their distribution, accessibility, and characteristics. Our goal is to provide insights into the current state of EV charging infrastructure and identify areas for improvement.</p>
-    </section>
+    <main>
+        <section id="introduction">
+            <h2>Project Introduction</h2>
+            <p>This project analyzes electric vehicle (EV) charging stations across the United States to understand their distribution, accessibility, and characteristics. Our goal is to provide insights into the current state of EV charging infrastructure and identify areas for improvement.</p>
+        </section>
 
-    <section id="data-description">
-        <h2>About the Data</h2>
-        <p>The dataset contains information about EV charging stations with the following key attributes:</p>
-        <ul>
-            <li>Location (Latitude, Longitude)</li>
-            <li>Charger Type (L1, L2, DC)</li>
-            <li>Availability Hours</li>
-            <li>Cost per kWh</li>
-            <li>User Ratings</li>
-            <li>Installation Year</li>
-        </ul>
-        <p>Data size: [X] records with [Y] attributes</p>
-        <p>Source: [Data source with link]</p>
-    </section>
+        <section id="data-description">
+            <h2>About the Data</h2>
+            <p>The data we plan to use in our study is published on Kaggle in January 2025 which contains information on worldwide charging stations (Atri, V.). The dataset contains more than 5000 entries and includes information on station location, charger type, availability, maintenance frequency, price, number of users per day, distance to city, and station company.</p>
+            <div class="data-attributes">
+                <h3>Key Attributes</h3>
+                <ul>
+                    <li>Location (Latitude, Longitude)</li>
+                    <li>Charger Type (L1, L2, DC)
+                        <ul>
+                            <li>L1 = Level 1 (Domestic use 4 miles/hr. charge)</li>
+                            <li>L2 = Level 2 (Domestic use chargers 43 miles/hr. charge)</li>
+                            <li>DC = Level 3/Direct Current (Commercial and public use, fasted charging)</li>
+                        </ul>
+                    </li>
+                    <li>Availability Hours</li>
+                    <li>Cost per kWh (USD)</li>
+                    <li>Usage Statistics (Average number of Users per Day)</li>
+                    <li>Station Operator (Brand)</li>
+                    <li>Installation</li>
+                    <li>Renewable Energy (Binary: Yes, No)</li>
+                    <li>Distance to City</li>
+                    <li>User Reviews (Ratings 0-5)</li>
+                    <li>Parking Spots</li>
+                    <li>Maintenance Frequency</li>
+                    <li>Installation Year</li>
+                </ul>
+            </div>
+        </section>
 
-    <section id="visualizations">
-        <h2>Data Visualizations</h2>
-        
-        <!-- D3 Visualization -->
-        <div class="viz-container">
-            <h3>Charging Station Distribution Map (D3)</h3>
-            <div id="map-viz"></div>
-            <p class="viz-description">This interactive map shows the geographical distribution of EV charging stations. Colors indicate different charger types, and hovering over points reveals detailed station information.</p>
-        </div>
+        <section id="visualizations">
+            <h2>Data Visualizations</h2>
+            
+            <!-- Map Visualization -->
+            <div class="viz-container">
+                <h3 data-tech="Leaflet.js">Charging Station Distribution Map</h3>
+                <div id="map-viz"></div>
+                <p class="viz-description">Interactive map showing the geographical distribution of EV charging stations. The map displays charging stations across the United States, with colors indicating different charger types.</p>
+            </div>
 
-        <!-- Altair Visualization -->
-        <div class="viz-container">
-            <h3>Installation Trends Over Time</h3>
-            <div id="trend-viz"></div>
-            <p class="viz-description">Interactive visualization showing the growth of different types of charging stations over time. Click on legend items to show/hide specific charger types.</p>
-        </div>
+            <!-- D3 Visualization -->
+            <div class="viz-container">
+                <h3 data-tech="D3.js">Installation Trends Over Time</h3>
+                <div id="trend-viz"></div>
+                <p class="viz-description">Interactive visualization showing the growth of different types of charging stations over time. Click on legend items to show/hide specific charger types.</p>
+            </div>
 
-    </section>
+            <!-- Heatmap Visualization -->
+            <div class="viz-container">
+                <h3 data-tech="Altair">Cost vs Charger Type Distribution</h3>
+                <div id="heatmap-viz"></div>
+                <p class="viz-description">Heatmap showing the distribution of charging stations across different cost ranges and charger types. The color intensity represents the number of stations in each category.</p>
+            </div>
+
+            <!-- Cost vs Rating Visualization -->
+            <div class="viz-container">
+                <h3 data-tech="Vega-Lite">Cost vs Rating Analysis</h3>
+                <div id="cost-rating-viz"></div>
+                <p class="viz-description">Scatter plot showing the relationship between charging cost and user ratings. The regression line helps identify if higher-cost stations tend to receive better or worse ratings.</p>
+            </div>
+
+            <!-- Charger Type vs Usage Visualization -->
+            <div class="viz-container">
+                <h3 data-tech="D3.js">Charger Type Usage Analysis</h3>
+                <div id="type-usage-viz"></div>
+                <p class="viz-description">Analysis of usage frequency by charger type. This visualization helps identify which types of chargers are most popular and aids in charging station planning.</p>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>© 2025 EV Charging Stations Analysis Project | Northeastern University Group 31</p>
+    </footer>
 
     <script src="visualizations.js"></script>
     <script src="https://d3js.org/d3-hexbin.v0.2.min.js"></script>
