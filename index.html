@@ -72,8 +72,8 @@
 </head>
 <body>
     <header>
-        <h1>Electric Vehicle Charging Stations Analysis</h1>
-        <p class="subtitle">Exploring the Future of Electric Vehicle Infrastructure</p>
+        <h1>How Electric Vehicle Charging Stations can Save Climate Change</h1>
+        <p class="subtitle">The Distribution of Electric Vehicle Charging Stations - A regional analysis</p>
         <div class="team-info">
             <p>DS4200 Group 31</p>
             <p>Group Members: Yanzhen Chen, Nicole Chen, Yiyang Bai</p>
@@ -83,7 +83,11 @@
     <main>
         <section id="introduction">
             <h2>Project Introduction</h2>
-            <p>This project analyzes electric vehicle (EV) charging stations across the United States to understand their distribution, accessibility, and characteristics. Our goal is to provide insights into the current state of EV charging infrastructure and identify areas for improvement.</p>
+            <p>To combat climate change, our research aims to explore how the type of charger encourages the use of Electric Vehicle chargers in various regions of the world to help increase the adoption of these eco-friendly vehicles.</p>
+            
+            <p>Climate change and the growing awareness of environmental externalities generated from fossil fuels, catalyzed a global movement in transitioning to green energy, specifically the adoption of Electric Vehicles (EVs). Transportation is the main source of US climate pollution and global pollution, and the Environmental Defense Fund predicts that a shift to electric vehicles could reduce 360 million tons of carbon dioxide emissions per year by 2040 ("Accelerating to 100% Clean: Zero Emitting Vehicles"). As of 2023, the International Energy Association reported for more than 40 million EVs on road globally, of which 95% of sales generated were contributed by China, Europe, and the United States (IEA). However, since EVs do not rely on gasoline, charging infrastructures are crucial to encourage wider use among individuals. Thus, our research project aims to explore the global distribution of electric vehicle charging stations, and examine how the type of electric vehicle charger affects user consumption.</p>
+            
+            <p>Several existing literatures investigate the relationship between public EV charging stations and the adoption of these clean vehicles. White et al. argues that the density of charging stations positively correlates with adoption through the effects of visibility and social acceptance (White et al.). However, the study was limited to only three major US metropolitan areas: Los Angeles, Dallas, and Atlanta. An international level study conducted by Anwar et al. suggests that across North America, Western Europe, and emerging markets, environmental factors only have minimal effect on EV adoption. Instead, encourages policy to focus on charging infrastructures and subsidies (Anwar et al.). The study emphasizes the widespread demand for charging infrastructures and its ability to drive adoption rates across nations. We aim to contribute to the discipline by diving deeper into the current regional distribution and availability of charging stations.</p>
         </section>
 
         <section id="data-description">
@@ -121,38 +125,64 @@
             <!-- Map Visualization -->
             <div class="viz-container">
                 <h3 data-tech="Leaflet.js">Charging Station Distribution Map</h3>
+                <p class="viz-instruction"><em>Zoom in and out to see count of EV charging stations on a continent, country, and city level. On a single location, toggle the colored point to show the address, rating, cost, hours, and power level</em></p>
                 <div id="map-viz"></div>
-                <p class="viz-description">Interactive map showing the geographical distribution of EV charging stations. The map displays charging stations across the United States, with colors indicating different charger types.</p>
+                <p class="viz-description">The map above shows the geographical distribution of EV charging stations around the world on continent, country, and city levels. On a single location, users can toggle the colored point to show the address, rating, cost, hours, and power level. On the country level, the United States has the greatest number of EV chargers of a total of 1175 chargers, of which 610 are clustered in Los Angeles. Mexico and China have the second and third highest number of EV chargers, being 521 and 315, respectively. Overall, charging stations tend to cluster within one region across all countries.</p>
             </div>
 
             <!-- D3 Visualization -->
             <div class="viz-container">
                 <h3 data-tech="D3.js">Installation Trends Over Time</h3>
+                <p class="viz-instruction"><em>Toggle on each data point to show exact year and number of installations for each charger type. Click on legend items to show/hide specific charger types.</em></p>
                 <div id="trend-viz"></div>
-                <p class="viz-description">Interactive visualization showing the growth of different types of charging stations over time. Click on legend items to show/hide specific charger types.</p>
+                <p class="viz-description">The line chart shows the installation trends of EV charging stations from 2010 to 2024 by charger types L1, L2, and DC. L1 and L2 chargers are slower chargers meant for private use whereas DC chargers are the fastest chargers mainly used for commercial or public charging. Overall, the number of new installations remain steady across the world throughout the years. There is a slight increase in L2 charger installations and a reduction in DC installations. This means that private chargers are growing in demand whereas public chargers could be facing either policy changes or lower demands.</p>
             </div>
 
             <!-- Heatmap Visualization -->
             <div class="viz-container">
                 <h3 data-tech="Altair">Cost vs Charger Type Distribution</h3>
+                <p class="viz-instruction"><em>The color intensity represents the number of stations in each category. Toggle to see cost range, charger type, average daily users, and number of charging stations.</em></p>
                 <div id="heatmap-viz"></div>
-                <p class="viz-description">Heatmap showing the distribution of charging stations across different cost ranges and charger types. The color intensity represents the number of stations in each category.</p>
+                <p class="viz-description">The heatmap shows the distribution of charging stations across different cost ranges and charger types. Overall, the distribution of chargers are fairly equal across price ranges besides the range of 0.05-0.10 cost per kilowatt, which is the most affordable bucket for charging costs. There is a sharp decrease in terms of number of chargers at the lowest price range for all three charger types. The lowest price however, encourages usage by increasing the average user per day by around 5 for each type of charger. The DC charger is most sensitive to price as the number of users per day decreased as price increased. The L1 and L2 chargers are less sensitive to an increase in price. In terms of public infrastructures, specifically DC fast chargers, users are more sensitive to prices, and private installations lead to less price sensitivity. This may be because there are limited options in terms of private installations and consumers cannot easily switch, whereas consumers can more easily switch to a cheaper public DC charger.</p>
             </div>
 
             <!-- Cost vs Rating Visualization -->
             <div class="viz-container">
                 <h3 data-tech="Vega-Lite">Cost vs Rating Analysis</h3>
+                <p class="viz-instruction"><em>Choose the charger type and availability of chargers to view different user ratings by cost. Toggle over each data point to find exact cost, rating, and charger type.</em></p>
                 <div id="cost-rating-viz"></div>
-                <p class="viz-description">Scatter plot showing the relationship between charging cost and user ratings. The regression line helps identify if higher-cost stations tend to receive better or worse ratings.</p>
+                <p class="viz-description">The scatter plot shows the relationship between charger cost and user ratings, filtered by charger type and availability. For L1 chargers, the user rating for both 24/7 and limited hours have a steady 4.0 rating across all costs. For L2 chargers, both availability types have a slight decrease in rating as cost increases. For DC chargers, there is a significant decrease in rating as cost increases, especially for 24/7 availability chargers. This suggests that users are more sensitive to cost for faster charging options, and may prefer to use slower charging options when costs are high.</p>
             </div>
 
             <!-- Charger Type vs Usage Visualization -->
             <div class="viz-container">
                 <h3 data-tech="D3.js">Charger Type Usage Analysis</h3>
+                <p class="viz-instruction"><em>Toggle over each bar to see exact usage statistics for each charger type. Click on legend items to filter by specific time periods.</em></p>
                 <div id="type-usage-viz"></div>
-                <p class="viz-description">Analysis of usage frequency by charger type. This visualization helps identify which types of chargers are most popular and aids in charging station planning.</p>
+                <p class="viz-description">Analysis of usage frequency by charger type reveals distinct patterns in how different charging options are utilized. DC fast chargers show the highest average daily usage, particularly during peak hours, while L1 and L2 chargers see more consistent usage throughout the day. This pattern suggests that DC chargers are preferred for quick charging needs during busy periods, while slower chargers are more commonly used for longer-term parking and overnight charging.</p>
             </div>
         </section>
+
+        <section id="summary">
+            <h2>Summary</h2>
+            <p>The figures above help visualize the relationship of the three different charger types with user experience, from cost, rating, popularity, usage, and distribution of these chargers. Overall, the United States, China, and Mexico sees the greatest number of EV chargers, and tend to have clusters of EV installations within each country. This may be due to certain policies and programs that subsidize and incentivize the use of electric vehicles. For instance, in California, the city with the greatest number of chargers on the first figure is LA because of California's state level $1000 rebate in addition to federal funding in addition to its state level EV infrastructure plans.</p>
+            
+            <p>Although new installations remain relatively steady over the years, private installations are growing in popularity. This could be due to the price sensitivity of public DC chargers as a reflection of using usage as a proxy for demand. The third figure of the heatmap shows that DC usage decreases as price increases, while L1 and L2 charger's usage remains steady across prices. However, the highest usage in the lowest price bucket also suggests that lowering costs can increase the use of stations across models. Among the 24/7 and limited hours chargers, 24/7 chargers tend to have higher user ratings due to the accessibility and convenience it provides users.</p>
+            
+            <p>Our study, however, is limited to its size and data. With around 5000 rows of data, we could be over generalizing our models and visualizations that could decrease the accuracy of our findings. Our next steps could be to examine one state specifically, such as California, where EV infrastructure is successful. Since our data covers multiple countries with different policies, focusing on one region such as California can control for biases in income, culture, driving patterns, and government policies that could be affecting our current study.</p>
+        </section>
+
+        <section id="cited-works">
+            <h2>Cited Works</h2>
+            <ul>
+                <li>"Accelerating to 100% Clean: Zero Emitting Vehicles." Environmental Defense Fund, 2023.</li>
+                <li>Anwar, et al. "The Impact of Environmental Factors and Infrastructure on Electric Vehicle Adoption." International Journal of Sustainable Transportation, 2023.</li>
+                <li>Atri, V. "Global EV Charging Station Dataset." Kaggle, January 2025.</li>
+                <li>"Global EV Outlook 2023." International Energy Agency (IEA), 2023.</li>
+                <li>White, et al. "The Role of Charging Infrastructure in Electric Vehicle Adoption." Transportation Research Part D: Transport and Environment, 2023.</li>
+            </ul>
+        </section>
+
     </main>
 
     <footer>
