@@ -75,9 +75,9 @@ def create_detailed_heatmap(df):
     )
 
     chart = (heatmap + text).properties(
-        width=900,
+        width=800,
         height=200,
-        padding={'left': 50, 'right': 120, 'top': 40, 'bottom': 60},
+        padding={'left': 50, 'right': 150, 'top': 40, 'bottom': 60},
         title=alt.TitleParams(
             text='Cost vs Charger Type Distribution',
             fontSize=16,

@@ -1,4 +1,3 @@
-/* 全局样式 */
 :root {
     --primary-color: #2c3e50;
     --secondary-color: #3498db;
@@ -18,7 +17,6 @@ body {
     padding: 0;
 }
 
-/* 页眉样式 */
 header {
     background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
     color: white;
@@ -60,7 +58,6 @@ section h2::after {
     border-radius: 2px;
 }
 
-/* 数据描述样式 */
 #data-description ul {
     list-style: none;
     padding: 0;
@@ -86,14 +83,21 @@ section h2::after {
     margin-top: 0.5rem;
 }
 
-/* 可视化容器样式 */
 .viz-container {
-    background: white;
-    border-radius: 12px;
-    padding: 1.5rem;
-    margin: 2rem 0;
-    box-shadow: var(--card-shadow);
-    transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 15px;
+    padding: 2rem;
+    margin: 2rem auto;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    overflow-x: auto;  
+    max-width: 100%;  
+}
+
+.viz-container > div {
+    width: 100%;
+    min-width: 800px;  
 }
 
 .viz-container:hover {
@@ -129,14 +133,12 @@ section h2::after {
     border-top: 1px solid #eee;
 }
 
-/* 地图容器特殊样式 */
 #map-viz {
     border-radius: 8px;
     overflow: hidden;
     box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
-/* 响应式设计 */
 @media (max-width: 768px) {
     section {
         padding: 0 1rem;
@@ -148,6 +150,7 @@ section h2::after {
 
     .viz-container {
         padding: 1rem;
+        margin: 1rem;
     }
 
     .team-info p {
@@ -156,7 +159,6 @@ section h2::after {
     }
 }
 
-/* 动画效果 */
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -172,7 +174,6 @@ section {
     animation: fadeIn 0.8s ease-out;
 }
 
-/* 工具提示样式 */
 .tooltip {
     position: absolute;
     visibility: hidden;
@@ -186,7 +187,6 @@ section {
     z-index: 1000;
 }
 
-/* 图例样式 */
 .legend {
     background: white;
     padding: 0.8rem;
@@ -195,7 +195,6 @@ section {
     font-size: 0.9rem;
 }
 
-/* 控件样式 */
 select, button {
     background: white;
     border: 1px solid #ddd;
@@ -341,32 +340,27 @@ circle {
     pointer-events: none;
 }
 
-/* 确保图例文本可见 */
 .legend-item text {
     fill: #333;
     font-size: 12px;
-    alignment-baseline: middle;
+    dominant-baseline: middle;
 }
 
-/* 确保坐标轴标签可见 */
 .axis-label {
     fill: #666;
     font-size: 14px;
 }
 
-/* 确保网格线显示正确 */
 .tick line {
     stroke: #e0e0e0;
     stroke-opacity: 0.3;
 }
 
-/* 添加交互时的过渡效果 */
 .dot-L1, .dot-L2, .dot-DC,
 .line-L1, .line-L2, .line-DC {
     transition: all 0.3s ease;
 }
 
-/* 隐藏的元素样式 */
 .hidden {
     opacity: 0;
     pointer-events: none;

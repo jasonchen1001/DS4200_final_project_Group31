@@ -81,9 +81,9 @@ async function createMap(data) {
         // Create markers for each charging station
         data.forEach(d => {
             const color = {
-                'L1': '#ff4d4d',
-                'L2': '#3385ff',
-                'DC': '#33cc33'
+                'L1': '#FF6B6B',  
+                'L2': '#4ECDC4',  
+                'DC': '#45B7D1'   
             }[d['Charger Type']] || '#999';
 
             const marker = L.circleMarker([+d.Latitude, +d.Longitude], {
@@ -95,13 +95,13 @@ async function createMap(data) {
                 fillOpacity: 0.8
             });
 
-            const rating = d['Reviews (Rating)'] ? 
-                `${parseFloat(d['Reviews (Rating)']).toFixed(1)} stars` : 
-                'No rating';
-            
-            const cost = d['Cost (USD/kWh)'] ? 
-                `$${parseFloat(d['Cost (USD/kWh)']).toFixed(2)}/kWh` : 
-                'Not available';
+                    const rating = d['Reviews (Rating)'] ? 
+                        `${parseFloat(d['Reviews (Rating)']).toFixed(1)} stars` : 
+                        'No rating';
+                    
+                    const cost = d['Cost (USD/kWh)'] ? 
+                        `$${parseFloat(d['Cost (USD/kWh)']).toFixed(2)}/kWh` : 
+                        'Not available';
 
             marker.bindPopup(`
                 <div style="min-width: 200px;">
@@ -111,8 +111,8 @@ async function createMap(data) {
                     <p style="margin: 5px 0;"><strong>Cost:</strong> ${cost}</p>
                     <p style="margin: 5px 0;"><strong>Hours:</strong> ${d.Is24Hours === 'True' ? '24/7' : 'Limited'}</p>
                     <p style="margin: 5px 0;"><strong>Power:</strong> ${d.IsHighPower === 'True' ? 'High Power' : 'Standard'}</p>
-                </div>
-            `);
+                        </div>
+                    `);
 
             markerClusterGroup.addLayer(marker);
         });
@@ -130,10 +130,10 @@ async function createMap(data) {
         countInfo.style.borderRadius = '4px';
         countInfo.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
         countInfo.style.zIndex = 1000;
-        countInfo.innerHTML = `显示 ${data.length} 个充电站`;
+        countInfo.innerHTML = `Showing ${data.length} charging stations`;
         countInfo.className = 'station-count-info';
         document.getElementById('map-viz').appendChild(countInfo);
-
+        
     } catch (error) {
         console.error('Error creating map:', error);
         document.getElementById('map-viz').innerHTML = 
@@ -170,7 +170,7 @@ async function loadTrendChart() {
                 });
             });
         });
-
+        
         // Set container size with larger margins for labels
         const container = document.getElementById('trend-viz');
         const margin = { top: 40, right: 120, bottom: 100, left: 70 };
@@ -199,7 +199,7 @@ async function loadTrendChart() {
 
         const color = d3.scaleOrdinal()
             .domain(types)
-            .range(['#ff4d4d', '#3385ff', '#33cc33']);
+            .range(['#FF6B6B', '#4ECDC4', '#45B7D1']);
 
         // Create line generator
         const line = d3.line()
@@ -513,17 +513,15 @@ async function loadTrendChart() {
 // Create heatmap
 async function createHeatmap() {
     try {
-        // 加载热力图规范
         const response = await fetch('heatmap_spec.json');
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         const spec = await response.json();
         
-        // 使用 Vega-Embed 渲染热力图
         await vegaEmbed('#heatmap-viz', spec, {
-            actions: false,  // 隐藏 Vega-Lite 操作菜单
-            renderer: 'svg'  // 使用 SVG 渲染
+            actions: false,  
+            renderer: 'svg' 
         });
         
     } catch (error) {
@@ -670,13 +668,19 @@ function createTypeUsageChart(data) {
                         field: 'usage',
                         type: 'quantitative',
                         title: 'Average Daily Usage',
+                        scale: {
+                            domain: [0, 60],
+                            nice: true
+                        },
                         axis: {
                             grid: true,
                             labelFontSize: 12,
                             titleFontSize: 14,
                             labelPadding: 10,
                             titlePadding: 15,
-                            gridColor: '#f0f0f0'
+                            gridColor: '#f0f0f0',
+                            labelColor: '#666',
+                            titleColor: '#333'
                         }
                     },
                     color: {
@@ -684,7 +688,7 @@ function createTypeUsageChart(data) {
                         type: 'nominal',
                         scale: {
                             domain: ['L1', 'L2', 'DC'],
-                            range: ['#ff4d4d', '#3385ff', '#33cc33']
+                            range: ['#FF6B6B', '#4ECDC4', '#45B7D1']
                         },
                         legend: null
                     },
@@ -896,59 +900,59 @@ function createCostRatingChart(data) {
             const spec = {
                 $schema: 'https://vega.github.io/schema/vega-lite/v5.json',
                 data: { values: processedData },
-                width: container.clientWidth - 100,
+                width: 950,  
                 height: 400,
                 layer: [
                     {
-                        mark: {
+            mark: {
                             type: 'point',
-                            filled: true,
-                            opacity: 0.5,
+                    filled: true,
+                            opacity: 0.8,
                             size: 80
-                        },
-                        encoding: {
-                            x: {
+            },
+            encoding: {
+                x: {
                                 field: 'cost',
-                                type: 'quantitative',
+                    type: 'quantitative',
                                 title: 'Cost (USD/kWh)',
                                 scale: {
                                     type: 'linear',
                                     domain: [0, 0.6],
                                     nice: true
                                 },
-                                axis: {
-                                    grid: true,
+                    axis: { 
+                        grid: true, 
                                     labelFontSize: 12,
                                     titleFontSize: 14,
                                     labelPadding: 10,
                                     titlePadding: 15,
                                     gridColor: '#f0f0f0'
-                                }
-                            },
-                            y: {
+                    }
+                },
+                y: {
                                 field: 'rating',
-                                type: 'quantitative',
+                    type: 'quantitative',
                                 title: 'User Rating',
                                 scale: {
                                     domain: [2.5, 5],
                                     nice: true
                                 },
-                                axis: {
-                                    grid: true,
+                    axis: { 
+                        grid: true,
                                     labelFontSize: 12,
                                     titleFontSize: 14,
                                     labelPadding: 10,
                                     titlePadding: 15,
-                                    gridColor: '#f0f0f0'
-                                }
-                            },
-                            color: {
+                        gridColor: '#f0f0f0'
+                    }
+                },
+                color: {
                                 field: 'charger_type',
-                                type: 'nominal',
-                                title: 'Charger Type',
-                                scale: {
-                                    domain: ['L1', 'L2', 'DC'],
-                                    range: ['#ff4d4d', '#3385ff', '#33cc33']
+                    type: 'nominal',
+                    title: 'Charger Type',
+                    scale: {
+                        domain: ['L1', 'L2', 'DC'],
+                                    range: ['#FF6B6B', '#4ECDC4', '#45B7D1']
                                 }
                             },
                             tooltip: [
@@ -978,9 +982,9 @@ function createCostRatingChart(data) {
                         }
                     }
                 ],
-                config: {
+            config: {
                     view: { stroke: 'transparent' },
-                    axis: {
+                axis: {
                         domainColor: '#ddd',
                         tickColor: '#ddd'
                     }
@@ -994,10 +998,10 @@ function createCostRatingChart(data) {
 
             // Embed chart
             vegaEmbed('#cost-rating-chart', spec, {
-                mode: 'vega-lite',
+            mode: 'vega-lite',
                 actions: false,
-                theme: 'light',
-                renderer: 'svg'
+            theme: 'light',
+            renderer: 'svg'
             }).then(result => {
                 // Calculate and display statistics
                 const stats = d3.rollup(processedData,
