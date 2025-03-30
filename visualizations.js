@@ -199,7 +199,7 @@ async function loadTrendChart() {
 
         const color = d3.scaleOrdinal()
             .domain(types)
-            .range(['#FF6B6B', '#4ECDC4', '#45B7D1']);
+            .range(['#665191', '#2f4b7c', '#003f5c']);
 
         // Create line generator
         const line = d3.line()
@@ -688,7 +688,7 @@ function createTypeUsageChart(data) {
                         type: 'nominal',
                         scale: {
                             domain: ['L1', 'L2', 'DC'],
-                            range: ['#FF6B6B', '#4ECDC4', '#45B7D1']
+                            range: ['#665191', '#2f4b7c', '#003f5c']
                         },
                         legend: null
                     },
