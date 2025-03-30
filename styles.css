@@ -1,7 +1,7 @@
 :root {
-    --primary-color: #2c3e50;
-    --secondary-color: #3498db;
-    --accent-color: #e74c3c;
+    --primary-color: #cce5ff; 
+    --secondary-color: #66b2ff; 
+    --accent-color: #0056b3;    
     --background-color: #f8f9fa;
     --text-color: #2c3e50;
     --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
