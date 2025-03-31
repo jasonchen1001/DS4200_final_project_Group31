@@ -953,17 +953,17 @@ function createCostRatingChart(data) {
                     title: 'Charger Type',
                     scale: {
                         domain: ['L1', 'L2', 'DC'],
-                                    range: ['#91bad6', '#528AAE', '#1E3f66']
-                                }
-                            },
-                            tooltip: [
-                                {field: 'charger_type', title: 'Type'},
-                                {field: 'cost', title: 'Cost (USD/kWh)', format: '.2f'},
-                                {field: 'rating', title: 'Rating', format: '.1f'},
-                                {field: 'is24Hours', title: 'Available 24/7'}
-                            ]
-                        }
-                    },
+                        range: ['#91bad6', '#528AAE', '#1E3f66']
+                    }
+                },
+                tooltip: [
+                    {field: 'charger_type', title: 'Type'},
+                    {field: 'cost', title: 'Cost (USD/kWh)', format: '.2f'},
+                    {field: 'rating', title: 'Rating', format: '.1f'},
+                    {field: 'is24Hours', title: 'Available 24/7'}
+                ]
+            }
+        },
                     {
                         transform: [{
                             regression: 'rating',
