@@ -199,7 +199,7 @@ async function loadTrendChart() {
 
         const color = d3.scaleOrdinal()
             .domain(types)
-            .range(['#FF6B6B', '#4ECDC4', '#45B7D1']);
+            .range(['#91bad6', '#528AAE', '#1E3f66']);
 
         // Create line generator
         const line = d3.line()
@@ -656,6 +656,7 @@ function createTypeUsageChart(data) {
                         field: 'charger_type',
                         type: 'nominal',
                         title: 'Charger Type',
+                        sort: ['L1', 'L2', 'DC'],
                         axis: {
                             labelFontSize: 12,
                             titleFontSize: 14,
@@ -688,7 +689,7 @@ function createTypeUsageChart(data) {
                         type: 'nominal',
                         scale: {
                             domain: ['L1', 'L2', 'DC'],
-                            range: ['#FF6B6B', '#4ECDC4', '#45B7D1']
+                            range: ['#91bad6', '#528AAE', '#1E3f66']
                         },
                         legend: null
                     },
@@ -952,7 +953,7 @@ function createCostRatingChart(data) {
                     title: 'Charger Type',
                     scale: {
                         domain: ['L1', 'L2', 'DC'],
-                                    range: ['#FF6B6B', '#4ECDC4', '#45B7D1']
+                                    range: ['#91bad6', '#528AAE', '#1E3f66']
                                 }
                             },
                             tooltip: [
