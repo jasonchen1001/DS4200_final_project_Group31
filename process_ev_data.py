@@ -3,11 +3,14 @@ import pandas as pd
 import json
 
 def create_detailed_heatmap(df):
+    bins = [0, 0.05, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, float('inf')]
+    labels = ['0–0.05', '0.10–0.15', '0.15–0.20', '0.20–0.25', 
+              '0.25–0.30', '0.30–0.35', '0.35–0.40', '0.40–0.45', '0.45+']
+    
     df['Cost_Range'] = pd.cut(
         df['Cost (USD/kWh)'],
-        bins=[0, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, float('inf')],
-        labels=['0–0.05', '0.05–0.10', '0.10–0.15', '0.15–0.20', '0.20–0.25', 
-                '0.25–0.30', '0.30–0.35', '0.35–0.40', '0.40–0.45', '0.45+']
+        bins=bins,
+        labels=labels
     )
 
     agg = df.groupby(['Cost_Range', 'Charger Type']).agg({
@@ -19,7 +22,7 @@ def create_detailed_heatmap(df):
     base = alt.Chart(agg).encode(
         x=alt.X('Cost_Range:O',
                 title='Cost per kWh (USD)',
-                sort=['0–0.05', '0.05–0.10', '0.10–0.15', '0.15–0.20', '0.20–0.25', 
+                sort=['0–0.05', '0.10–0.15', '0.15–0.20', '0.20–0.25', 
                       '0.25–0.30', '0.30–0.35', '0.35–0.40', '0.40–0.45', '0.45+'],
                 axis=alt.Axis(
                     labelAngle=45,
@@ -52,8 +55,9 @@ def create_detailed_heatmap(df):
         color=alt.Color('Station ID:Q',
                        title='Number of Stations',
                        scale=alt.Scale(
-                           scheme='yellowgreenblue',  
-                           type='symlog',  
+                           scheme='blues', 
+                           type='linear', 
+                           domain=[50, agg['Station ID'].max()],  
                        ),
                        legend=alt.Legend(
                            gradientLength=150,
@@ -63,24 +67,43 @@ def create_detailed_heatmap(df):
                        ))
     )
 
+    # add value labels
     text = base.mark_text(
         font='Arial',
         fontSize=11,
         fontWeight='bold',
-        color='white',  
+        color='white',
         baseline='middle',
         align='center'
     ).encode(
         text=alt.Text('Station ID:Q', format=',d')
     )
 
-    chart = (heatmap + text).properties(
+    annotations = pd.DataFrame([
+        {'x': '0.25–0.30', 'y': 'DC Fast', 'text': '2022: Inflation Reduction Act'},
+        {'x': '0.35–0.40', 'y': 'Level 2', 'text': '2020: COVID-19 Impact'},
+        {'x': '0.15–0.20', 'y': 'Level 1', 'text': '2015: Paris Agreement'}
+    ])
+
+    annotation_layer = alt.Chart(annotations).mark_text(
+        fontSize=10,
+        dy=-10,
+        color='gray'
+    ).encode(
+        x='x:O',
+        y='y:N',
+        text='text:N'
+    )
+
+    chart = (heatmap + text + annotation_layer).properties(
         width=800,
         height=200,
-        padding={'left': 50, 'right': 150, 'top': 40, 'bottom': 60},
+        padding={'left': 50, 'right': 150, 'top': 60, 'bottom': 60}, 
         title=alt.TitleParams(
             text='Cost vs Charger Type Distribution',
+            subtitle='Showing distribution of charging stations across different price ranges and charger types',
             fontSize=16,
+            subtitleFontSize=12,
             anchor='middle',
             offset=20
         )

@@ -27,13 +27,20 @@ This project provides an interactive visualization dashboard for analyzing Elect
    - Charger type comparison
    - Interactive tooltips
 
-4. **Cost vs Rating Analysis**
+4. **Feature Comparison Across Charger Types (Vega-Lite)**
+   - Boxplot visualization for multiple features
+   - Comparison across different cost ranges
+   - Interactive feature selection
+   - Detailed statistical analysis
+   - Comprehensive statistics section
+
+5. **Cost vs Rating Analysis**
    - Scatter plot with trend line
    - Filtering by charger type and availability
    - Statistical analysis
    - Correlation insights
 
-5. **Charger Type Usage Analysis**
+6. **Charger Type Usage Analysis**
    - Usage patterns by charger type
    - Filtering capabilities
    - Average daily usage statistics

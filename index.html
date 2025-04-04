@@ -72,7 +72,7 @@
 </head>
 <body>
     <header>
-        <h1>How Electric Vehicle Charging Stations can Save Climate Change</h1>
+        <h1 style="color: #ffffff;">How Electric Vehicle Charging Stations can Save Climate Change</h1>
         <p class="subtitle">The Distribution of Electric Vehicle Charging Stations - A regional analysis</p>
         <div class="team-info">
             <p>DS4200 Group 31</p>
@@ -146,12 +146,12 @@
                 <p class="viz-description">The heatmap shows the distribution of charging stations across different cost ranges and charger types. Overall, the distribution of chargers are fairly equal across price ranges besides the range of 0.05-0.10 cost per kilowatt, which is the most affordable bucket for charging costs. There is a sharp decrease in terms of number of chargers at the lowest price range for all three charger types. The lowest price however, encourages usage by increasing the average user per day by around 5 for each type of charger. The DC charger is most sensitive to price as the number of users per day decreased as price increased. The L1 and L2 chargers are less sensitive to an increase in price. In terms of public infrastructures, specifically DC fast chargers, users are more sensitive to prices, and private installations lead to less price sensitivity. This may be because there are limited options in terms of private installations and consumers cannot easily switch, whereas consumers can more easily switch to a cheaper public DC charger.</p>
             </div>
 
-            <!-- Cost vs Rating Visualization -->
+            <!-- Feature Comparison visualization -->
             <div class="viz-container">
-                <h3 data-tech="Vega-Lite">4. Cost vs Rating Analysis</h3>
-                <p class="viz-instruction"><em>Choose the charger type and availability of chargers to view different user ratings by cost. Toggle over each data point to find exact cost, rating, and charger type.</em></p>
-                <div id="cost-rating-viz"></div>
-                <p class="viz-description">The scatter plot shows the relationship between charger cost and user ratings, filtered by charger type and availability. For L1 chargers, the user rating for both 24/7 and limited hours have a steady 4.0 rating across all costs. For L2 chargers, both availability types have a slight decrease in rating as cost increases. For DC chargers, there is a significant decrease in rating as cost increases, especially for 24/7 availability chargers. This suggests that users are more sensitive to cost for faster charging options, and may prefer to use slower charging options when costs are high.</p>
+                <h3 data-tech="Vega-Lite">4. Feature Comparison Across Charger Types</h3>
+                <p class="viz-instruction"><em>Compare different features across charger types and cost ranges. Select different features to analyze various aspects of charging stations.</em></p>
+                <div id="boxplot-viz"></div>
+                <p class="viz-description">The boxplot visualization allows for detailed comparison of various features across different charger types and cost ranges. This analysis reveals how characteristics such as user ratings, daily usage patterns, charging capacity, and maintenance frequency vary between L1, L2, and DC chargers. The comparison helps identify key differences and trends in how these features manifest across different charging solutions.</p>
             </div>
 
             <!-- Charger Type vs Usage Visualization -->
@@ -160,6 +160,14 @@
                 <p class="viz-instruction"><em>Toggle over each bar to see exact usage statistics for each charger type. Click on legend items to filter by specific time periods.</em></p>
                 <div id="type-usage-viz"></div>
                 <p class="viz-description">Analysis of usage frequency by charger type reveals distinct patterns in how different charging options are utilized. DC fast chargers show the highest average daily usage, particularly during peak hours, while L1 and L2 chargers see more consistent usage throughout the day. This pattern suggests that DC chargers are preferred for quick charging needs during busy periods, while slower chargers are more commonly used for longer-term parking and overnight charging.</p>
+            </div>
+
+            <!-- Cost vs Rating Visualization -->
+            <div class="viz-container">
+                <h3 data-tech="Vega-Lite">6. Cost vs Rating Analysis</h3>
+                <p class="viz-instruction"><em>Choose the charger type and availability of chargers to view different user ratings by cost. Toggle over each data point to find exact cost, rating, and charger type.</em></p>
+                <div id="cost-rating-viz"></div>
+                <p class="viz-description">The scatter plot shows the relationship between charger cost and user ratings, filtered by charger type and availability. For L1 chargers, the user rating for both 24/7 and limited hours have a steady 4.0 rating across all costs. For L2 chargers, both availability types have a slight decrease in rating as cost increases. For DC chargers, there is a significant decrease in rating as cost increases, especially for 24/7 availability chargers. This suggests that users are more sensitive to cost for faster charging options, and may prefer to use slower charging options when costs are high.</p>
             </div>
         </section>
 
@@ -170,6 +178,26 @@
             <p>Although new installations remain relatively steady over the years, private installations are growing in popularity. This could be due to the price sensitivity of public DC chargers as a reflection of using usage as a proxy for demand. The third figure of the heatmap shows that DC usage decreases as price increases, while L1 and L2 charger's usage remains steady across prices. However, the highest usage in the lowest price bucket also suggests that lowering costs can increase the use of stations across models. Among the 24/7 and limited hours chargers, 24/7 chargers tend to have higher user ratings due to the accessibility and convenience it provides users.</p>
             
             <p>Our study, however, is limited to its size and data. With around 5000 rows of data, we could be over generalizing our models and visualizations that could decrease the accuracy of our findings. Our next steps could be to examine one state specifically, such as California, where EV infrastructure is successful. Since our data covers multiple countries with different policies, focusing on one region such as California can control for biases in income, culture, driving patterns, and government policies that could be affecting our current study.</p>
+        </section>
+
+        <section id="conclusion">
+            <h2>Conclusion</h2>
+            <p>Through our data visualization analysis, we have gained the following key insights:</p>
+            <ul>
+                <li>The geographical distribution of charging stations shows distinct clustering patterns, particularly in countries like the United States, China, and Mexico, indicating that the development of EV infrastructure is closely related to local policies and economic conditions.</li>
+                <li>The choice of charger type is closely related to usage patterns: DC fast chargers, despite their higher cost, show the highest usage frequency, suggesting that users prioritize charging speed; while L1 and L2 chargers, though slower, offer more affordable options with relatively stable usage rates.</li>
+                <li>Price sensitivity analysis reveals that users are most sensitive to price changes for DC fast chargers, reflecting how users balance charging speed and cost when choosing charging options.</li>
+                <li>24/7 operating charging stations generally receive higher user ratings, indicating that convenience and accessibility are crucial factors affecting user experience.</li>
+            </ul>
+
+            <p>Future research could explore the following directions:</p>
+            <ul>
+                <li>Add temporal dimension analysis to study seasonal variations and daily peak hours in charging station usage patterns.</li>
+                <li>Incorporate more socio-economic indicators, such as regional income levels and population density, to provide a more comprehensive analysis of factors affecting charging station usage rates.</li>
+                <li>Develop predictive models based on existing data to forecast future charging station demand, providing references for infrastructure planning.</li>
+                <li>Enhance user behavior analysis to study charging preferences among different user types (e.g., commuters, long-distance travelers).</li>
+                <li>Consider adding environmental impact assessments to analyze the specific environmental effects of different charger types.</li>
+            </ul>
         </section>
 
         <section id="work cited">

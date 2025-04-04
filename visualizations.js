@@ -146,363 +146,243 @@ async function loadTrendChart() {
     try {
         const data = await loadData();
         
-        // Prepare data: aggregate by year and charger type
-        const yearlyData = d3.rollup(data,
-            v => v.length,
-            d => d['Installation Year'],
-            d => d['Charger Type']
-        );
+        // create filter container
+        const container = document.getElementById('trend-viz');
+        const filterContainer = document.createElement('div');
+        filterContainer.style.marginBottom = '20px';
+        filterContainer.style.display = 'flex';
+        filterContainer.style.alignItems = 'center';
+        filterContainer.style.gap = '10px';
+        container.appendChild(filterContainer);
+
+        // add availability filter
+        const availabilityLabel = document.createElement('label');
+        availabilityLabel.textContent = 'Availability: ';
+        availabilityLabel.style.fontSize = '14px';
+        availabilityLabel.style.color = '#555';
+
+        const availabilitySelect = document.createElement('select');
+        availabilitySelect.style.padding = '5px 10px';
+        availabilitySelect.style.borderRadius = '4px';
+        availabilitySelect.style.border = '1px solid #ddd';
         
-        // Get all years and types
-        const years = Array.from(yearlyData.keys()).filter(year => 
-            year && year >= 2010 && year <= 2024
-        ).sort();
-        const types = ['L1', 'L2', 'DC'];
+        const options = [
+            { value: 'all', text: 'All Hours' },
+            { value: '24/7', text: '24/7 Only' },
+            { value: 'limited', text: 'Limited Hours' }
+        ];
         
-        // Convert to D3 format
-        const trendData = [];
-        years.forEach(year => {
-            types.forEach(type => {
-                trendData.push({
-                    year: +year,
-                    type: type,
-                    count: yearlyData.get(year)?.get(type) || 0
+        options.forEach(option => {
+            const opt = document.createElement('option');
+            opt.value = option.value;
+            opt.textContent = option.text;
+            availabilitySelect.appendChild(opt);
+        });
+
+        filterContainer.appendChild(availabilityLabel);
+        filterContainer.appendChild(availabilitySelect);
+
+        // update chart function
+        function updateChart(selectedAvailability) {
+            // filter data based on selection
+            const filteredData = data.filter(d => {
+                if (selectedAvailability === 'all') return true;
+                if (selectedAvailability === '24/7') return d['Is24Hours'] === 'True';
+                if (selectedAvailability === 'limited') return d['Is24Hours'] === 'False';
+                return true;
+            });
+            
+            // prepare data: aggregate by year and charger type
+            const yearlyData = d3.rollup(filteredData,
+                v => v.length,
+                d => d['Installation Year'],
+                d => d['Charger Type']
+            );
+            
+            // get all years and types
+            const years = Array.from(yearlyData.keys()).filter(year => 
+                year && year >= 2010 && year <= 2024
+            ).sort();
+            const types = ['L1', 'L2', 'DC'];
+            
+            // convert to D3 format
+            const trendData = [];
+            years.forEach(year => {
+                types.forEach(type => {
+                    trendData.push({
+                        year: +year,
+                        type: type,
+                        count: yearlyData.get(year)?.get(type) || 0
+                    });
                 });
             });
-        });
-        
-        // Set container size with larger margins for labels
-        const container = document.getElementById('trend-viz');
-        const margin = { top: 40, right: 120, bottom: 100, left: 70 };
-        const width = container.clientWidth - margin.left - margin.right;
-        const height = 450 - margin.top - margin.bottom;
 
-        // Clear previous chart
-        d3.select('#trend-viz').selectAll('*').remove();
+            // clear previous chart
+            d3.select('#trend-viz').selectAll('svg').remove();
 
-        // Create SVG
-        const svg = d3.select('#trend-viz')
-            .append('svg')
-            .attr('width', width + margin.left + margin.right)
-            .attr('height', height + margin.top + margin.bottom)
-            .append('g')
-            .attr('transform', `translate(${margin.left},${margin.top})`);
+            // set container size
+            const margin = { top: 40, right: 120, bottom: 100, left: 70 };
+            const width = container.clientWidth - margin.left - margin.right;
+            const height = 450 - margin.top - margin.bottom;
 
-        // Create scales
-        const x = d3.scaleLinear()
-            .domain([2010, 2024])
-            .range([0, width]);
+            // create SVG
+            const svg = d3.select('#trend-viz')
+                .append('svg')
+                .attr('width', width + margin.left + margin.right)
+                .attr('height', height + margin.top + margin.bottom)
+                .append('g')
+                .attr('transform', `translate(${margin.left},${margin.top})`);
 
-        const y = d3.scaleLinear()
-            .domain([0, d3.max(trendData, d => d.count)])
-            .range([height, 0]);
+            // create scales
+            const x = d3.scaleLinear()
+                .domain([2010, 2024])
+                .range([0, width]);
 
-        const color = d3.scaleOrdinal()
-            .domain(types)
-            .range(['#91bad6', '#528AAE', '#1E3f66']);
+            const y = d3.scaleLinear()
+                .domain([10, d3.max(trendData, d => d.count)])
+                .range([height, 0]);
 
-        // Create line generator
-        const line = d3.line()
-            .x(d => x(d.year))
-            .y(d => y(d.count))
-            .curve(d3.curveMonotoneX);
+            const color = d3.scaleOrdinal()
+                .domain(types)
+                .range(['#91bad6', '#528AAE', '#1E3f66']);
 
-        // Add X axis with adjusted label position
-        svg.append('g')
-            .attr('transform', `translate(0,${height})`)
-            .call(d3.axisBottom(x)
-                .ticks(15)
-                .tickFormat(d3.format('d')))
-            .call(g => g.select('.domain').remove())
-            .call(g => g.selectAll('.tick line')
-                .clone()
-                .attr('y2', -height)
-                .attr('stroke-opacity', 0.1));
+            // create line generator
+            const line = d3.line()
+                .x(d => x(d.year))
+                .y(d => y(d.count))
+                .curve(d3.curveMonotoneX);
 
-        // Add X axis label
-        svg.append('text')
-            .attr('x', width / 2)
-            .attr('y', height + 35)
-            .attr('text-anchor', 'middle')
-            .attr('fill', '#666')
-            .style('font-size', '14px')
-            .text('Installation Year');
+            // add X axis
+            svg.append('g')
+                .attr('transform', `translate(0,${height})`)
+                .call(d3.axisBottom(x)
+                    .ticks(15)
+                    .tickFormat(d3.format('d')))
+                .call(g => g.select('.domain').remove())
+                .call(g => g.selectAll('.tick line')
+                    .clone()
+                    .attr('y2', -height)
+                    .attr('stroke-opacity', 0.1));
 
-        // Add Y axis with adjusted label position
-        svg.append('g')
-            .call(d3.axisLeft(y)
-                .ticks(5))
-            .call(g => g.select('.domain').remove())
-            .call(g => g.selectAll('.tick line')
-                .clone()
-                .attr('x2', width)
-                .attr('stroke-opacity', 0.1));
+            // add X axis label
+            svg.append('text')
+                .attr('x', width / 2)
+                .attr('y', height + 35)
+                .attr('text-anchor', 'middle')
+                .attr('fill', '#666')
+                .style('font-size', '14px')
+                .text('Installation Year');
 
-        // Add Y axis label
-        svg.append('text')
-            .attr('transform', 'rotate(-90)')
-            .attr('y', -50)
-            .attr('x', -height / 2)
-            .attr('text-anchor', 'middle')
-            .attr('fill', '#666')
-            .style('font-size', '14px')
-            .text('Number of Installations');
+            // add annotations
+            const annotations = [
+                { year: 2012, text: 'Tesla Model S Launch', y: 15 },
+                { year: 2015, text: 'Paris Agreement', y: 20 },
+                { year: 2018, text: 'EV Tax Credit Extension', y: 25 },
+                { year: 2020, text: 'COVID-19 Impact', y: 30 },
+                { year: 2022, text: 'Inflation Reduction Act', y: 35 }
+            ];
 
-        // Store visibility state for each type
-        const visibilityState = {
-            'L1': true,
-            'L2': true,
-            'DC': true
-        };
+            // add annotations
+            annotations.forEach(anno => {
+                svg.append('line')
+                    .attr('x1', x(anno.year))
+                    .attr('y1', y(anno.y))
+                    .attr('x2', x(anno.year))
+                    .attr('y2', height)
+                    .attr('stroke', '#ddd')
+                    .attr('stroke-dasharray', '4,4')
+                    .attr('opacity', 0.5);
 
-        // Function to update line visibility
-        function updateVisibility(type) {
-            visibilityState[type] = !visibilityState[type];
-            
-            // Update line visibility
-            svg.select(`.line-${type}`)
-                .transition()
-                .duration(300)
-                .style('opacity', visibilityState[type] ? 0.8 : 0);
-            
-            // Update dot visibility
-            svg.selectAll(`.dot-${type}`)
-                .transition()
-                .duration(300)
-                .style('opacity', visibilityState[type] ? 0.8 : 0)
-                .style('pointer-events', visibilityState[type] ? 'all' : 'none');
+                svg.append('text')
+                    .attr('x', x(anno.year))
+                    .attr('y', y(anno.y) - 5)
+                    .attr('text-anchor', 'middle')
+                    .attr('font-size', '10px')
+                    .attr('fill', '#666')
+                    .text(anno.text);
+            });
+
+            // add Y axis
+            svg.append('g')
+                .call(d3.axisLeft(y)
+                    .ticks(5))
+                .call(g => g.select('.domain').remove())
+                .call(g => g.selectAll('.tick line')
+                    .clone()
+                    .attr('x2', width)
+                    .attr('stroke-opacity', 0.1));
+
+            // add Y axis label
+            svg.append('text')
+                .attr('transform', 'rotate(-90)')
+                .attr('y', -50)
+                .attr('x', -height / 2)
+                .attr('text-anchor', 'middle')
+                .attr('fill', '#666')
+                .style('font-size', '14px')
+                .text('Number of Installations');
+
+            // add lines and points for each type
+            types.forEach(type => {
+                const typeData = trendData.filter(d => d.type === type);
                 
-            // Update legend item style
-            svg.select(`.legend-item-${type}`)
-                .transition()
-                .duration(300)
-                .style('opacity', visibilityState[type] ? 1 : 0.5);
+                // add lines
+                svg.append('path')
+                    .datum(typeData)
+                    .attr('class', `line-${type}`)
+                    .attr('fill', 'none')
+                    .attr('stroke', color(type))
+                    .attr('stroke-width', 2.5)
+                    .attr('d', line)
+                    .style('opacity', 0.8);
+
+                // add points
+                svg.selectAll(`.dot-${type}`)
+                    .data(typeData)
+                    .join('circle')
+                    .attr('class', `dot-${type}`)
+                    .attr('cx', d => x(d.year))
+                    .attr('cy', d => y(d.count))
+                    .attr('r', 4)
+                    .attr('fill', color(type))
+                    .style('opacity', 0.8);
+            });
+
+            // add legend
+            const legend = svg.append('g')
+                .attr('transform', `translate(${width + 20}, 10)`);
+
+            legend.append('text')
+                .attr('x', 0)
+                .attr('y', -5)
+                .style('font-size', '12px')
+                .style('font-weight', 'bold')
+                .text('Charger Types');
+
+            types.forEach((type, i) => {
+                const g = legend.append('g')
+                    .attr('transform', `translate(0,${i * 25 + 15})`);
+
+                g.append('circle')
+                    .attr('r', 6)
+                    .attr('fill', color(type));
+
+                g.append('text')
+                    .attr('x', 15)
+                    .attr('y', 4)
+                    .text(type)
+                    .style('font-size', '12px');
+            });
         }
 
-        // Add lines and dots for each type
-        types.forEach(type => {
-            const typeData = trendData.filter(d => d.type === type);
-            
-            // Add line
-            svg.append('path')
-                .datum(typeData)
-                .attr('class', `line-${type}`)
-                .attr('fill', 'none')
-                .attr('stroke', color(type))
-                .attr('stroke-width', 2.5)
-                .attr('d', line)
-                .style('opacity', 0.8)
-                .on('mouseover', function() {
-                    if (visibilityState[type]) {
-                        d3.select(this)
-                            .transition()
-                            .duration(200)
-                            .style('opacity', 1)
-                            .attr('stroke-width', 3.5);
-                    }
-                })
-                .on('mouseout', function() {
-                    if (visibilityState[type]) {
-                        d3.select(this)
-                            .transition()
-                            .duration(200)
-                            .style('opacity', 0.8)
-                            .attr('stroke-width', 2.5);
-                    }
-                });
-
-            // Add dots
-            svg.selectAll(`.dot-${type}`)
-                .data(typeData)
-                .join('circle')
-                .attr('class', `dot-${type}`)
-                .attr('cx', d => x(d.year))
-                .attr('cy', d => y(d.count))
-                .attr('r', 4)
-                .attr('fill', color(type))
-                .style('opacity', 0.8)
-                .style('cursor', 'pointer')
-                .on('mouseover', function(event, d) {
-                    if (visibilityState[type]) {
-                        // Highlight current dot
-                        d3.select(this)
-                            .transition()
-                            .duration(200)
-                            .attr('r', 8)
-                            .style('opacity', 1)
-                            .style('stroke', '#fff')
-                            .style('stroke-width', 2);
-                        
-                        // Highlight corresponding line
-                        svg.select(`.line-${type}`)
-                            .transition()
-                            .duration(200)
-                            .style('opacity', 1)
-                            .attr('stroke-width', 3.5);
-                            
-                        // Show tooltip
-                        tooltip
-                            .style('visibility', 'visible')
-                            .style('opacity', 1)
-                            .style('left', (event.clientX + 10) + 'px')
-                            .style('top', (event.clientY - 10) + 'px')
-                            .html(`
-                                <div style="background: ${color(type)}; color: white; padding: 4px 8px; border-radius: 4px; margin-bottom: 4px;">
-                                    <strong>${d.type} Charger</strong>
-                                </div>
-                                <div style="padding: 4px 8px;">
-                                    <div>Year: ${d.year}</div>
-                                    <div>Installations: ${d.count}</div>
-                                </div>
-                            `);
-                    }
-                })
-                .on('mouseout', function() {
-                    if (visibilityState[type] && !d3.select(this).classed('selected-dot')) {
-                        // Restore dot style
-                        d3.select(this)
-                            .transition()
-                            .duration(200)
-                            .attr('r', 4)
-                            .style('opacity', 0.8)
-                            .style('stroke', 'none');
-                            
-                        // Restore line style
-                        svg.select(`.line-${type}`)
-                            .transition()
-                            .duration(200)
-                            .style('opacity', 0.8)
-                            .attr('stroke-width', 2.5);
-                            
-                        // Hide tooltip
-                        tooltip
-                            .style('visibility', 'hidden')
-                            .style('opacity', 0);
-                    }
-                })
-                .on('click', function(event, d) {
-                    event.stopPropagation();
-                    
-                    // Get current dot selection state
-                    const isSelected = d3.select(this).classed('selected-dot');
-                    
-                    // Remove all dot selections
-                    svg.selectAll('.selected-dot')
-                        .classed('selected-dot', false)
-                        .transition()
-                        .duration(200)
-                        .attr('r', 4)
-                        .style('stroke', 'none');
-                    
-                    if (!isSelected) {
-                        // Add new selection state
-                        d3.select(this)
-                            .classed('selected-dot', true)
-                            .transition()
-                            .duration(200)
-                            .attr('r', 8)
-                            .style('stroke', '#fff')
-                            .style('stroke-width', 2);
-                            
-                        // Show detailed information
-                        tooltip
-                            .style('visibility', 'visible')
-                            .style('opacity', 1)
-                            .style('left', (event.clientX + 10) + 'px')
-                            .style('top', (event.clientY - 10) + 'px')
-                            .html(`
-                                <div style="background: ${color(type)}; color: white; padding: 4px 8px; border-radius: 4px; margin-bottom: 4px;">
-                                    <strong>${d.type} Charger Details</strong>
-                                </div>
-                                <div style="padding: 4px 8px;">
-                                    <div>Year: ${d.year}</div>
-                                    <div>Installations: ${d.count}</div>
-                                </div>
-                            `);
-                    } else {
-                        // Hide tooltip
-                        tooltip
-                            .style('visibility', 'hidden')
-                            .style('opacity', 0);
-                    }
-                });
+        // add filter change event listener
+        availabilitySelect.addEventListener('change', (event) => {
+            updateChart(event.target.value);
         });
 
-        // Add legend with improved positioning and interactivity
-        const legend = svg.append('g')
-            .attr('transform', `translate(${width + 20}, 10)`);
-
-        // Add legend title
-        legend.append('text')
-            .attr('x', 0)
-            .attr('y', -5)
-            .style('font-size', '12px')
-            .style('font-weight', 'bold')
-            .text('Charger Types');
-
-        // Add legend items with click interaction
-        const legendItems = legend.selectAll('.legend-item')
-            .data(types)
-            .join('g')
-            .attr('class', d => `legend-item legend-item-${d}`)
-            .attr('transform', (d, i) => `translate(0,${i * 25 + 15})`)
-            .style('cursor', 'pointer')
-            .on('click', function(event, d) {
-                updateVisibility(d);
-            })
-            .on('mouseover', function() {
-                d3.select(this)
-                    .transition()
-                    .duration(200)
-                    .style('opacity', 0.8);
-            })
-            .on('mouseout', function(event, d) {
-                d3.select(this)
-                    .transition()
-                    .duration(200)
-                    .style('opacity', visibilityState[d] ? 1 : 0.5);
-            });
-
-        legendItems.append('circle')
-            .attr('r', 6)
-            .attr('fill', d => color(d));
-
-        legendItems.append('text')
-            .attr('x', 15)
-            .attr('y', 4)
-            .text(d => d)
-            .style('font-size', '12px');
-
-        // Add tooltip
-        const tooltip = d3.select('body')
-            .append('div')
-            .attr('class', 'tooltip')
-            .style('position', 'fixed')
-            .style('visibility', 'hidden')
-            .style('opacity', 0)
-            .style('background-color', 'white')
-            .style('border', '1px solid #ddd')
-            .style('border-radius', '4px')
-            .style('padding', '8px')
-            .style('font-size', '12px')
-            .style('box-shadow', '0 2px 4px rgba(0,0,0,0.1)')
-            .style('pointer-events', 'none')
-            .style('z-index', '9999');
-
-        // Add click handler to clear selection
-        svg.on('click', function() {
-            svg.selectAll('.selected-dot')
-                .classed('selected-dot', false)
-                .transition()
-                .duration(200)
-                .attr('r', 4)
-                .style('stroke', 'none');
-                
-            tooltip
-                .style('visibility', 'hidden')
-                .style('opacity', 0);
-        });
-
+        // initialize chart
+        updateChart('all');
+        
     } catch (error) {
         console.error('Error loading trend chart:', error);
         document.getElementById('trend-viz').innerHTML = 
@@ -548,6 +428,7 @@ function createTypeUsageChart(data) {
         filterContainer.style.marginBottom = '20px';
         filterContainer.style.display = 'flex';
         filterContainer.style.gap = '20px';
+        filterContainer.style.flexWrap = 'wrap';
         filterContainer.style.alignItems = 'center';
         container.appendChild(filterContainer);
 
@@ -568,13 +449,58 @@ function createTypeUsageChart(data) {
             { value: 'L2', text: 'L2 Only' },
             { value: 'DC', text: 'DC Only' }
         ];
+
+        // Add power level filter
+        const powerFilterLabel = document.createElement('label');
+        powerFilterLabel.textContent = 'Power Level: ';
+        powerFilterLabel.style.fontSize = '14px';
+        powerFilterLabel.style.color = '#555';
         
-        typeOptions.forEach(option => {
-            const opt = document.createElement('option');
-            opt.value = option.value;
-            opt.textContent = option.text;
-            typeFilter.appendChild(opt);
-        });
+        const powerFilter = document.createElement('select');
+        powerFilter.style.padding = '5px 10px';
+        powerFilter.style.borderRadius = '4px';
+        powerFilter.style.border = '1px solid #ddd';
+        
+        const powerOptions = [
+            { value: 'all', text: 'All Power Levels' },
+            { value: 'high', text: 'High Power' },
+            { value: 'standard', text: 'Standard Power' }
+        ];
+
+        // Add cost range filter
+        const costFilterLabel = document.createElement('label');
+        costFilterLabel.textContent = 'Cost Range: ';
+        costFilterLabel.style.fontSize = '14px';
+        costFilterLabel.style.color = '#555';
+        
+        const costFilter = document.createElement('select');
+        costFilter.style.padding = '5px 10px';
+        costFilter.style.borderRadius = '4px';
+        costFilter.style.border = '1px solid #ddd';
+        
+        const costOptions = [
+            { value: 'all', text: 'All Cost Ranges' },
+            { value: 'low', text: 'Low (< $0.15/kWh)' },
+            { value: 'medium', text: 'Medium ($0.15-0.30/kWh)' },
+            { value: 'high', text: 'High (> $0.30/kWh)' }
+        ];
+
+        // Add renewable energy filter
+        const renewableFilterLabel = document.createElement('label');
+        renewableFilterLabel.textContent = 'Renewable Energy: ';
+        renewableFilterLabel.style.fontSize = '14px';
+        renewableFilterLabel.style.color = '#555';
+        
+        const renewableFilter = document.createElement('select');
+        renewableFilter.style.padding = '5px 10px';
+        renewableFilter.style.borderRadius = '4px';
+        renewableFilter.style.border = '1px solid #ddd';
+        
+        const renewableOptions = [
+            { value: 'all', text: 'All Sources' },
+            { value: 'yes', text: 'Renewable Only' },
+            { value: 'no', text: 'Non-Renewable Only' }
+        ];
 
         // Add usage range filter
         const rangeFilterLabel = document.createElement('label');
@@ -589,43 +515,84 @@ function createTypeUsageChart(data) {
         
         const rangeOptions = [
             { value: 'all', text: 'All Usage' },
-            { value: 'medium', text: 'Medium (5-15)' },
-            { value: 'high', text: 'High (15+)' }
+            { value: 'low', text: 'Low (≤ 10)' },
+            { value: 'medium', text: 'Medium (11-20)' },
+            { value: 'high', text: 'High (> 20)' }
         ];
-        
-        rangeOptions.forEach(option => {
-            const opt = document.createElement('option');
-            opt.value = option.value;
-            opt.textContent = option.text;
-            rangeFilter.appendChild(opt);
+
+        // Add options to filters
+        [typeOptions, powerOptions, costOptions, renewableOptions, rangeOptions].forEach((options, index) => {
+            const filter = [typeFilter, powerFilter, costFilter, renewableFilter, rangeFilter][index];
+            options.forEach(option => {
+                const opt = document.createElement('option');
+                opt.value = option.value;
+                opt.textContent = option.text;
+                filter.appendChild(opt);
+            });
         });
 
         // Add filters to container
-        filterContainer.appendChild(typeFilterLabel);
-        filterContainer.appendChild(typeFilter);
-        filterContainer.appendChild(rangeFilterLabel);
-        filterContainer.appendChild(rangeFilter);
+        [
+            [typeFilterLabel, typeFilter],
+            [powerFilterLabel, powerFilter],
+            [costFilterLabel, costFilter],
+            [renewableFilterLabel, renewableFilter],
+            [rangeFilterLabel, rangeFilter]
+        ].forEach(([label, filter]) => {
+            const filterGroup = document.createElement('div');
+            filterGroup.style.display = 'flex';
+            filterGroup.style.flexDirection = 'column';
+            filterGroup.style.gap = '5px';
+            filterGroup.appendChild(label);
+            filterGroup.appendChild(filter);
+            filterContainer.appendChild(filterGroup);
+        });
         
         // Data processing function
         function processData() {
             const selectedType = typeFilter.value;
+            const selectedPower = powerFilter.value;
+            const selectedCost = costFilter.value;
+            const selectedRenewable = renewableFilter.value;
             const selectedRange = rangeFilter.value;
             
             return data
                 .map(d => ({
                     charger_type: d['Charger Type'],
-                    usage: parseFloat(d['Usage Stats (avg users/day)'])
+                    usage: parseFloat(d['Usage Stats (avg users/day)']),
+                    is_high_power: d['IsHighPower'] === 'True',
+                    cost: parseFloat(d['Cost (USD/kWh)']),
+                    renewable: d['Renewable Energy Source'],
+                    hours: d['Is24Hours'] === 'True' ? '24/7' : 'Limited'
                 }))
                 .filter(d => {
                     if (isNaN(d.usage) || d.usage < 0) return false;
                     
                     if (selectedType !== 'all' && d.charger_type !== selectedType) return false;
                     
+                    if (selectedPower !== 'all') {
+                        if (selectedPower === 'high' && !d.is_high_power) return false;
+                        if (selectedPower === 'standard' && d.is_high_power) return false;
+                    }
+
+                    if (selectedCost !== 'all') {
+                        if (selectedCost === 'low' && d.cost >= 0.15) return false;
+                        if (selectedCost === 'medium' && (d.cost < 0.15 || d.cost > 0.30)) return false;
+                        if (selectedCost === 'high' && d.cost <= 0.30) return false;
+                    }
+
+                    if (selectedRenewable !== 'all') {
+                        if (selectedRenewable === 'yes' && d.renewable !== 'Yes') return false;
+                        if (selectedRenewable === 'no' && d.renewable === 'Yes') return false;
+                    }
+                    
                     switch (selectedRange) {
+                        case 'low':
+                            return d.usage <= 10;
                         case 'medium':
-                            return d.usage > 5 && d.usage <= 15;
+                            return d.usage > 10 && d.usage <= 20;
                         case 'high':
-                            return d.usage > 15;
+                            return d.usage > 20;
                         default: // 'all'
                             return true;
                     }
@@ -636,11 +603,7 @@ function createTypeUsageChart(data) {
         function updateChart() {
             const processedData = processData();
             
-            if (processedData.length === 0) {
-                container.innerHTML = '<p class="error">No data available for selected filters</p>';
-                return;
-            }
-
+            // even if there is no data, create chart
             const spec = {
                 $schema: 'https://vega.github.io/schema/vega-lite/v5.json',
                 data: { values: processedData },
@@ -730,53 +693,49 @@ function createTypeUsageChart(data) {
                 theme: 'light',
                 renderer: 'svg'
             }).then(result => {
-                // Calculate and display statistics
-                const stats = d3.rollup(processedData,
-                    v => ({
-                        mean: d3.mean(v.map(d => d.usage)),
-                        median: d3.median(v.map(d => d.usage)),
-                        count: v.length
-                    }),
-                    d => d.charger_type
-                );
+                // only show stats info when there is data
+                if (processedData.length > 0) {
+                    const stats = d3.rollup(processedData,
+                        v => ({
+                            mean: d3.mean(v.map(d => d.usage)),
+                            median: d3.median(v.map(d => d.usage)),
+                            count: v.length
+                        }),
+                        d => d.charger_type
+                    );
 
-                // Add statistics information
-                const statsDiv = document.createElement('div');
-                statsDiv.className = 'stats-info';
-                statsDiv.style.marginTop = '20px';
-                statsDiv.style.padding = '15px';
-                statsDiv.style.backgroundColor = '#f8f9fa';
-                statsDiv.style.borderRadius = '8px';
-                statsDiv.style.boxShadow = '0 2px 4px rgba(0,0,0,0.05)';
-                statsDiv.style.fontFamily = 'Arial, sans-serif';
-                
-                statsDiv.innerHTML = '<h4 style="margin-top: 0; color: #333; font-size: 16px;">Usage Statistics</h4>' +
-                    Array.from(stats.entries()).map(([type, stat]) => 
-                        `<div style="margin-bottom: 8px; color: #555; font-size: 14px;">
-                            <strong>${type} Chargers</strong>: 
-                            Average ${stat.mean.toFixed(1)} uses/day, 
-                            Median ${stat.median.toFixed(1)} uses/day, 
-                            Sample size ${stat.count}
-                        </div>`
-                    ).join('');
-                
-                container.appendChild(statsDiv);
+                    // Add statistics information
+                    const statsDiv = document.createElement('div');
+                    statsDiv.className = 'stats-info';
+                    statsDiv.style.marginTop = '20px';
+                    statsDiv.style.padding = '15px';
+                    statsDiv.style.backgroundColor = '#f8f9fa';
+                    statsDiv.style.borderRadius = '8px';
+                    statsDiv.style.boxShadow = '0 2px 4px rgba(0,0,0,0.05)';
+                    statsDiv.style.fontFamily = 'Arial, sans-serif';
+                    
+                    statsDiv.innerHTML = '<h4 style="margin-top: 0; color: #333; font-size: 16px;">Usage Statistics</h4>' +
+                        Array.from(stats.entries()).map(([type, stat]) => 
+                            `<div style="margin-bottom: 8px; color: #555; font-size: 14px;">
+                                <strong>${type} Chargers</strong>: 
+                                Average ${stat.mean.toFixed(1)} uses/day, 
+                                Median ${stat.median.toFixed(1)} uses/day, 
+                                Sample size ${stat.count}
+                            </div>`
+                        ).join('');
+                    
+                    container.appendChild(statsDiv);
+                }
             });
         }
 
-        // Add event listeners to filters
-        typeFilter.addEventListener('change', () => {
-            // Clear previous chart and stats
-            container.innerHTML = '';
-            container.appendChild(filterContainer);
-            updateChart();
-        });
-
-        rangeFilter.addEventListener('change', () => {
-            // Clear previous chart and stats
-            container.innerHTML = '';
-            container.appendChild(filterContainer);
-            updateChart();
+        // Add event listeners to all filters
+        [typeFilter, powerFilter, costFilter, renewableFilter, rangeFilter].forEach(filter => {
+            filter.addEventListener('change', () => {
+                container.innerHTML = '';
+                container.appendChild(filterContainer);
+                updateChart();
+            });
         });
 
         // Initial chart creation
@@ -1065,6 +1024,371 @@ function createCostRatingChart(data) {
     }
 }
 
+// Create boxplot comparison
+function createBoxplotComparison(data) {
+    try {
+        console.log('Starting boxplot comparison creation...');
+        
+        const container = document.getElementById('boxplot-viz');
+        if (!container) {
+            throw new Error('Container element not found');
+        }
+        
+        container.style.minHeight = '600px';
+        container.style.width = '100%';
+
+        // add feature selector
+        const filterContainer = document.createElement('div');
+        filterContainer.style.marginBottom = '20px';
+        filterContainer.style.display = 'flex';
+        filterContainer.style.gap = '20px';
+        filterContainer.style.alignItems = 'center';
+        container.appendChild(filterContainer);
+
+        const featureLabel = document.createElement('label');
+        featureLabel.textContent = 'Compare by: ';
+        featureLabel.style.fontSize = '14px';
+        featureLabel.style.color = '#555';
+        
+        const featureSelect = document.createElement('select');
+        featureSelect.style.padding = '5px 10px';
+        featureSelect.style.borderRadius = '4px';
+        featureSelect.style.border = '1px solid #ddd';
+        
+        const features = [
+            { value: 'rating', text: 'User Rating', field: 'Reviews (Rating)' },
+            { value: 'usage', text: 'Daily Users', field: 'Usage Stats (avg users/day)' },
+            { value: 'capacity', text: 'Charging Capacity', field: 'Charging Capacity (kW)' },
+            { 
+                value: 'maintenance', 
+                text: 'Maintenance Score', 
+                field: 'Maintenance Frequency',
+                transform: (value) => {
+                    // convert maintenance frequency to numerical score
+                    const scores = {
+                        'Monthly': 3,
+                        'Quarterly': 2,
+                        'Annually': 1
+                    };
+                    return scores[value] || 0;
+                }
+            }
+        ];
+        
+        features.forEach(feature => {
+            const opt = document.createElement('option');
+            opt.value = feature.value;
+            opt.textContent = feature.text;
+            featureSelect.appendChild(opt);
+        });
+
+        filterContainer.appendChild(featureLabel);
+        filterContainer.appendChild(featureSelect);
+
+        // update chart function
+        function updateChart(selectedFeature) {
+            const feature = features.find(f => f.value === selectedFeature);
+            
+            // prepare data
+            const processedData = data
+                .map(d => ({
+                    type: d['Charger Type'],
+                    value: feature.transform ? 
+                        feature.transform(d[feature.field]) : 
+                        parseFloat(d[feature.field]),
+                    costRange: d['Cost_Range'],
+                    operator: d['Station Operator'],
+                    renewable: d['Renewable Energy Source'],
+                    connectors: d['Connector Types']
+                }))
+                .filter(d => !isNaN(d.value));
+
+            const spec = {
+                $schema: 'https://vega.github.io/schema/vega-lite/v5.json',
+                data: { values: processedData },
+                width: 950,
+                height: 500,
+                mark: {
+                    type: 'boxplot',
+                    extent: 1.5
+                },
+                encoding: {
+                    x: {
+                        field: 'type',
+                        type: 'nominal',
+                        title: 'Charger Type',
+                        axis: {
+                            labelAngle: 0,
+                            labelFontSize: 12,
+                            titleFontSize: 14
+                        }
+                    },
+                    y: {
+                        field: 'value',
+                        type: 'quantitative',
+                        title: feature.text,
+                        scale: { zero: false },
+                        axis: {
+                            labelFontSize: 12,
+                            titleFontSize: 14
+                        }
+                    },
+                    color: {
+                        field: 'type',
+                        type: 'nominal',
+                        scale: {
+                            domain: ['L1', 'L2', 'DC'],
+                            range: ['#91bad6', '#528AAE', '#1E3f66']
+                        },
+                        title: 'Charger Type'
+                    },
+                    column: {
+                        field: 'costRange',
+                        type: 'nominal',
+                        title: 'Cost Range (USD/kWh)',
+                        header: {
+                            labelAngle: -45,
+                            labelAlign: 'right',
+                            labelFontSize: 11,
+                            labels: true,
+                            labelExpr: "datum.value == 'undefined' ? '' : datum.value"
+                        }
+                    }
+                },
+                config: {
+                    boxplot: {
+                        median: { color: 'white' },
+                        ticks: true
+                    },
+                    view: { stroke: null }
+                }
+            };
+
+            // clear previous chart
+            container.innerHTML = '';
+            container.appendChild(filterContainer);
+
+            // create new chart container
+            const chartContainer = document.createElement('div');
+            chartContainer.id = 'boxplot-chart';
+            container.appendChild(chartContainer);
+
+            // render chart
+            vegaEmbed('#boxplot-chart', spec, {
+                actions: false,
+                theme: 'light'
+            }).then(result => {
+                // calculate stats info
+                const stats = d3.rollup(processedData,
+                    v => ({
+                        mean: d3.mean(v.map(d => d.value)),
+                        median: d3.median(v.map(d => d.value)),
+                        q1: d3.quantile(v.map(d => d.value).sort(d3.ascending), 0.25),
+                        q3: d3.quantile(v.map(d => d.value).sort(d3.ascending), 0.75),
+                        count: v.length
+                    }),
+                    d => d.type,
+                    d => d.costRange
+                );
+
+                // add stats info
+                const statsDiv = document.createElement('div');
+                statsDiv.className = 'stats-info';
+                statsDiv.style.marginTop = '20px';
+                statsDiv.style.padding = '15px';
+                statsDiv.style.backgroundColor = '#f8f9fa';
+                statsDiv.style.borderRadius = '8px';
+                statsDiv.style.boxShadow = '0 2px 4px rgba(0,0,0,0.05)';
+                
+                let statsHtml = `<h4 style="margin-top: 0; color: #333; font-size: 16px;">Statistics for ${feature.text}</h4>`;
+                
+                for (const [type, costRanges] of stats.entries()) {
+                    statsHtml += `<div style="margin-top: 10px;"><strong>${type} Chargers:</strong></div>`;
+                    for (const [costRange, stat] of costRanges.entries()) {
+                        statsHtml += `
+                            <div style="margin-left: 20px; margin-bottom: 8px; color: #555; font-size: 14px;">
+                                <strong>${costRange}:</strong>
+                                Mean: ${stat.mean.toFixed(2)},
+                                Median: ${stat.median.toFixed(2)},
+                                Q1: ${stat.q1.toFixed(2)},
+                                Q3: ${stat.q3.toFixed(2)},
+                                Count: ${stat.count}
+                            </div>`;
+                    }
+                }
+                
+                statsDiv.innerHTML = statsHtml;
+                container.appendChild(statsDiv);
+            });
+        }
+
+        // add selector event listener
+        featureSelect.addEventListener('change', (event) => {
+            updateChart(event.target.value);
+        });
+
+        // initialize chart
+        updateChart('rating');
+        
+    } catch (error) {
+        console.error('Error creating boxplot comparison:', error);
+        document.getElementById('boxplot-viz').innerHTML = 
+            `<p class="error">Error creating boxplot comparison: ${error.message}</p>`;
+    }
+}
+
+// Create operator analysis
+function createOperatorAnalysis(data) {
+    try {
+        console.log('Starting operator analysis creation...');
+        
+        const container = document.getElementById('operator-viz');
+        if (!container) {
+            throw new Error('Container element not found');
+        }
+        
+        container.style.minHeight = '600px';
+        container.style.width = '100%';
+
+        // prepare data
+        const processedData = data
+            .map(d => ({
+                operator: d['Station Operator'],
+                rating: parseFloat(d['Reviews (Rating)']),
+                usage: parseFloat(d['Usage Stats (avg users/day)']),
+                renewable: d['Renewable Energy Source'],
+                chargerType: d['Charger Type'],
+                capacity: parseFloat(d['Charging Capacity (kW)'])
+            }))
+            .filter(d => !isNaN(d.rating) && !isNaN(d.usage) && !isNaN(d.capacity));
+
+        // create operator analysis chart
+        const spec = {
+            $schema: 'https://vega.github.io/schema/vega-lite/v5.json',
+            data: { values: processedData },
+            vconcat: [
+                {
+                    width: 800,
+                    height: 300,
+                    mark: { type: 'bar', tooltip: true },
+                    encoding: {
+                        x: {
+                            field: 'operator',
+                            type: 'nominal',
+                            title: 'Station Operator',
+                            axis: {
+                                labelAngle: -45,
+                                labelFontSize: 12,
+                                titleFontSize: 14
+                            }
+                        },
+                        y: {
+                            aggregate: 'mean',
+                            field: 'rating',
+                            type: 'quantitative',
+                            title: 'Average Rating',
+                            scale: { domain: [0, 5] }
+                        },
+                        color: {
+                            field: 'renewable',
+                            type: 'nominal',
+                            title: 'Renewable Energy',
+                            scale: {
+                                domain: ['Yes', 'No'],
+                                range: ['#2ecc71', '#e74c3c']
+                            }
+                        }
+                    },
+                    title: 'Average Rating by Operator and Renewable Energy Usage'
+                },
+                {
+                    width: 800,
+                    height: 300,
+                    mark: { type: 'bar', tooltip: true },
+                    encoding: {
+                        x: {
+                            field: 'operator',
+                            type: 'nominal',
+                            title: 'Station Operator',
+                            axis: {
+                                labelAngle: -45,
+                                labelFontSize: 12,
+                                titleFontSize: 14
+                            }
+                        },
+                        y: {
+                            aggregate: 'mean',
+                            field: 'usage',
+                            type: 'quantitative',
+                            title: 'Average Daily Users'
+                        },
+                        color: {
+                            field: 'chargerType',
+                            type: 'nominal',
+                            title: 'Charger Type',
+                            scale: {
+                                domain: ['L1', 'L2', 'DC'],
+                                range: ['#91bad6', '#528AAE', '#1E3f66']
+                            }
+                        }
+                    },
+                    title: 'Average Daily Users by Operator and Charger Type'
+                }
+            ]
+        };
+
+        // render chart
+        vegaEmbed('#operator-viz', spec, {
+            actions: false,
+            theme: 'light'
+        }).then(result => {
+            // calculate stats info
+            const operatorStats = d3.rollup(processedData,
+                v => ({
+                    avgRating: d3.mean(v.map(d => d.rating)),
+                    avgUsage: d3.mean(v.map(d => d.usage)),
+                    renewableCount: d3.sum(v.map(d => d.renewable === 'Yes' ? 1 : 0)),
+                    totalCount: v.length,
+                    avgCapacity: d3.mean(v.map(d => d.capacity))
+                }),
+                d => d.operator
+            );
+
+            // add stats info
+            const statsDiv = document.createElement('div');
+            statsDiv.className = 'stats-info';
+            statsDiv.style.marginTop = '20px';
+            statsDiv.style.padding = '15px';
+            statsDiv.style.backgroundColor = '#f8f9fa';
+            statsDiv.style.borderRadius = '8px';
+            statsDiv.style.boxShadow = '0 2px 4px rgba(0,0,0,0.05)';
+            
+            let statsHtml = '<h4 style="margin-top: 0; color: #333; font-size: 16px;">Operator Statistics</h4>';
+            
+            for (const [operator, stats] of operatorStats.entries()) {
+                statsHtml += `
+                    <div style="margin-bottom: 12px;">
+                        <strong>${operator}</strong>
+                        <ul style="margin: 5px 0; padding-left: 20px;">
+                            <li>Average Rating: ${stats.avgRating.toFixed(2)}</li>
+                            <li>Average Daily Users: ${stats.avgUsage.toFixed(1)}</li>
+                            <li>Renewable Energy Stations: ${stats.renewableCount} of ${stats.totalCount} (${((stats.renewableCount/stats.totalCount)*100).toFixed(1)}%)</li>
+                            <li>Average Charging Capacity: ${stats.avgCapacity.toFixed(1)} kW</li>
+                        </ul>
+                    </div>`;
+            }
+            
+            statsDiv.innerHTML = statsHtml;
+            container.appendChild(statsDiv);
+        });
+        
+    } catch (error) {
+        console.error('Error creating operator analysis:', error);
+        document.getElementById('operator-viz').innerHTML = 
+            `<p class="error">Error creating operator analysis: ${error.message}</p>`;
+    }
+}
+
 // Initialize the visualization
 async function initialize() {
     try {
@@ -1078,6 +1402,8 @@ async function initialize() {
         
         createCostRatingChart(data);
         createTypeUsageChart(data);
+        createBoxplotComparison(data);
+        createOperatorAnalysis(data);
         
     } catch (error) {
         console.error('Error initializing visualizations:', error);
